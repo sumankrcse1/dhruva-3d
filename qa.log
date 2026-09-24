@@ -1,0 +1,27 @@
+00:00.349  blend            | Read blend: "/Users/sumankumaryadav/Documents/dhruva 3d model/Dhruva_Defence_Ecosystem.blend"
+Info: Packed 2 file(s)
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+{"dimensions": {"EFM_Body": {"expected": [0.17, 0.17, 0.13], "actual": [0.17, 0.17, 0.13], "pass": true}, "NODE_01_LRX1_Enclosure": {"expected": [0.16, 0.114, 0.028], "actual": [0.16, 0.114, 0.028], "pass": true}, "NODE_01_ANT50_Radome": {"expected": [0.124, 0.124, 0.192], "actual": [0.124, 0.124, 0.192], "pass": true}, "NODE_01_ANT50_Mast_610mm": {"expected": [0.0267, 0.0267, 0.61], "actual": [0.0267, 0.0267, 0.61], "pass": true}}, "missing_images": [], "nonunit_mesh_scales": [], "notes": ["ANT-50 dome adds 62 mm above cylinder, yielding 254 mm overall sensor envelope.", "EFM underside intentionally reference-limited.", "No automatic claim of intersection-free geometry; visual camera QA required.", "Watch/personnel/app screens are concept placeholders."]}
+00:07.938  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_01_Master_overview.png'
+RENDER_COMPLETE 01_Master_overview
+00:16.018  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_02_EFM_closeup.png'
+RENDER_COMPLETE 02_EFM_closeup
+00:23.613  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_03_ANT50_closeup.png'
+RENDER_COMPLETE 03_ANT50_closeup
+00:31.200  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_04_LRX1_receiver.png'
+RENDER_COMPLETE 04_LRX1_receiver
+00:39.044  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_05_Lightning_network.png'
+RENDER_COMPLETE 05_Lightning_network
+00:48.846  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_06_Wearable_concept.png'
+RENDER_COMPLETE 06_Wearable_concept
+00:58.164  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_07_Command_application_concept.png'
+RENDER_COMPLETE 07_Command_application_concept
+01:07.360  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_08_Translator_concept.png'
+RENDER_COMPLETE 08_Translator_concept
+01:19.998  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_09_End_to_end_architecture.png'
+RENDER_COMPLETE 09_End_to_end_architecture
+01:30.650  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_10_Emergency_alert.png'
+RENDER_COMPLETE 10_Emergency_alert
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

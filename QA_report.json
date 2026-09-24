@@ -1,0 +1,282 @@
+{
+  "dimensions": {
+    "EFM_Body": {
+      "expected": [
+        0.17,
+        0.17,
+        0.13
+      ],
+      "actual": [
+        0.17,
+        0.17,
+        0.13
+      ],
+      "pass": true
+    },
+    "NODE_01_LRX1_Enclosure": {
+      "expected": [
+        0.16,
+        0.114,
+        0.028
+      ],
+      "actual": [
+        0.16,
+        0.114,
+        0.028
+      ],
+      "pass": true
+    },
+    "NODE_01_ANT50_Radome": {
+      "expected": [
+        0.124,
+        0.124,
+        0.192
+      ],
+      "actual": [
+        0.124,
+        0.124,
+        0.192
+      ],
+      "pass": true
+    },
+    "NODE_01_ANT50_Mast_610mm": {
+      "expected": [
+        0.0267,
+        0.0267,
+        0.61
+      ],
+      "actual": [
+        0.0267,
+        0.0267,
+        0.61
+      ],
+      "pass": true
+    }
+  },
+  "missing_images": [],
+  "nonunit_mesh_scales": [],
+  "notes": [
+    "ANT-50 dome adds 62 mm above cylinder, yielding 254 mm overall sensor envelope.",
+    "EFM underside intentionally reference-limited.",
+    "No automatic claim of intersection-free geometry; visual camera QA required.",
+    "Watch/personnel/app screens are concept placeholders."
+  ],
+  "object_count": 1238,
+  "camera_count": 10,
+  "packed_images": [
+    "Dhruva_Defence_logo.png"
+  ],
+  "packed_fonts": [
+    "Arial Bold",
+    "Arial Regular"
+  ],
+  "reusable_product_exports": {
+    "EFM100": 57,
+    "LRX1": 38,
+    "ANT50": 12,
+    "HealthWatch": 7,
+    "AndroidDevice": 6,
+    "Soldier": 38,
+    "TranslatorDevice": 6
+  },
+  "hero_raw_mesh_topology": {
+    "EFM_ClearMeasurementPad": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_TripodFoot": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_TripodFoot.001": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_TripodFoot.002": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Body": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_LowerHousing": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_SensingFace_REFERENCE_LIMITED": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener.001": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener.002": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener.003": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener.004": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_PerimeterFastener.005": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Seal": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Mount_ThreeQuarterNPT_nominal": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_JunctionBox": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_JunctionLidScrew": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_JunctionLidScrew.001": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_JunctionLidScrew.002": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_JunctionLidScrew.003": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Zone_Board": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Zone_Rule": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Zone_Support": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_Zone_Support.001": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_ProcessDisplay_Frame": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_ProcessDisplay_Screen": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_ProcessDisplay_Stanchion": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_ProcessDisplay_Stanchion.001": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_Mast_610mm": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_Radome": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_Dome": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_BaseSeam": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBracket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBolt": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBolt.001": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBracket.001": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBolt.002": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_ANT50_ClampBolt.003": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_Enclosure": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_TopLabel": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_POWER": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_STRIKE": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_GPS": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_SERVER 1": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_SERVER 2": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LED_SERVER 3": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_USB HOST_MetalRim": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_USB HOST_Socket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_ETHERNET_MetalRim": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_ETHERNET_Socket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_USB DEVICE_MetalRim": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_USB DEVICE_Socket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_GPS_MetalRim": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_GPS_Socket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LIGHTNING SENSOR_MetalRim": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_LIGHTNING SENSOR_Socket": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_PowerJack": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountEar": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountBolt": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountBolt.001": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountEar.001": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountBolt.002": {
+      "nonmanifold_edges": 0
+    },
+    "NODE_01_LRX1_MountBolt.003": {
+      "nonmanifold_edges": 0
+    },
+    "EFM_DATA_AnimatedPacket": {
+      "nonmanifold_edges": 0
+    }
+  },
+  "visual_review_limits": [
+    "Inspected camera previews and final render contact sheet; not an exhaustive geometric collision certification.",
+    "Generic personnel and unconfirmed wearable/interface models remain concept placeholders.",
+    "No LOD switching system or photoreal scanned personnel provided.",
+    "Blender 4.x compatibility not tested; source scripts use the installed Blender 5.2.2."
+  ]
+}

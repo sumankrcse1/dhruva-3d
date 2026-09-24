@@ -1,0 +1,10 @@
+/Users/sumankumaryadav/Documents/dhruva 3d model/scripts/build_scene.py:25: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m=bpy.data.materials.new(n); m.use_nodes=True
+/Users/sumankumaryadav/Documents/dhruva 3d model/scripts/build_scene.py:410: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  world=bpy.data.worlds.new('HighAltitude_Daylight'); scene.world=world; world.use_nodes=True
+00:26.089  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_master.png'
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+BUILD_COMPLETE 1209
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

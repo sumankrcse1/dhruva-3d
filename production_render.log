@@ -1,0 +1,11 @@
+00:00.392  blend            | Read blend: "/Users/sumankumaryadav/Documents/dhruva 3d model/Dhruva_Defence_Ecosystem.blend"
+/Users/sumankumaryadav/Documents/dhruva 3d model/scripts/polish_scene.py:6: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m=bpy.data.materials.new('MAT_Mountain_Strata_Snow'); m.use_nodes=True
+Info: No new files have been packed
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+POLISH_COMPLETE
+04:27.771  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/01_Master_overview.png'
+RENDER_COMPLETE 01_Master_overview
+10:12.458  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/02_EFM_closeup.png'
+RENDER_COMPLETE 02_EFM_closeup
+RENDER_COMPLETE 03_ANT50_closeup

@@ -1,0 +1,19 @@
+00:00.319  blend            | Read blend: "/Users/sumankumaryadav/Documents/dhruva 3d model/Dhruva_Defence_Ecosystem.blend"
+Info: Packed 1 file(s)
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+FINAL_SCENE_SAVED
+00:08.972  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_01_Master_overview.png'
+RENDER_COMPLETE 01_Master_overview
+00:17.422  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_02_EFM_closeup.png'
+RENDER_COMPLETE 02_EFM_closeup
+00:26.903  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_03_ANT50_closeup.png'
+RENDER_COMPLETE 03_ANT50_closeup
+00:36.627  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_08_Translator_concept.png'
+RENDER_COMPLETE 08_Translator_concept
+00:42.199  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_09_End_to_end_architecture.png'
+RENDER_COMPLETE 09_End_to_end_architecture
+00:52.112  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_10_Emergency_alert.png'
+RENDER_COMPLETE 10_Emergency_alert
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

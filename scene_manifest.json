@@ -1,0 +1,35 @@
+{
+  "objects": 1209,
+  "collections": [
+    "00_ENVIRONMENT",
+    "01_EFM_ZONE",
+    "02_LIGHTNING_NETWORK",
+    "03_WARNING_SYSTEM",
+    "04_SOLDIER_WEARABLE",
+    "05_COMMAND_CENTER",
+    "06_TRANSLATOR",
+    "07_OPTIONAL_BORDER_TECH",
+    "08_DATA_VISUALIZATION",
+    "09_LIGHTING",
+    "10_CAMERAS",
+    "11_PRESENTATION_UI"
+  ],
+  "cameras": [
+    "CAM_00_MASTER_OVERVIEW",
+    "CAM_01_EFM",
+    "CAM_02_LIGHTNING_SENSOR",
+    "CAM_03_LIGHTNING_NETWORK",
+    "CAM_04_EARLY_WARNING",
+    "CAM_05_SOLDIER_WEARABLE",
+    "CAM_06_COMMAND_CENTER",
+    "CAM_07_TRANSLATOR",
+    "CAM_08_SYSTEM_ARCHITECTURE",
+    "CAM_09_LRX_RECEIVER"
+  ],
+  "engine": "CYCLES",
+  "resolution": [
+    3840,
+    2160
+  ],
+  "unconfirmed": "EFM sensing underside details; watch dimensions and metrics; final Dhruva screens and protocols; exact final warning hardware; personnel asset likeness."
+}

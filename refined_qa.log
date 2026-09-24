@@ -1,0 +1,27 @@
+00:00.442  blend            | Read blend: "/Users/sumankumaryadav/Documents/dhruva 3d model/Dhruva_Defence_Ecosystem.blend"
+Info: No new files have been packed
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+REFINE_COMPLETE
+00:09.117  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_01_Master_overview.png'
+RENDER_COMPLETE 01_Master_overview
+00:18.261  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_02_EFM_closeup.png'
+RENDER_COMPLETE 02_EFM_closeup
+00:26.827  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_03_ANT50_closeup.png'
+RENDER_COMPLETE 03_ANT50_closeup
+00:37.312  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_04_LRX1_receiver.png'
+RENDER_COMPLETE 04_LRX1_receiver
+00:44.211  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_05_Lightning_network.png'
+RENDER_COMPLETE 05_Lightning_network
+00:54.016  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_06_Wearable_concept.png'
+RENDER_COMPLETE 06_Wearable_concept
+01:03.215  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_07_Command_application_concept.png'
+RENDER_COMPLETE 07_Command_application_concept
+01:13.442  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_08_Translator_concept.png'
+RENDER_COMPLETE 08_Translator_concept
+01:25.457  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_09_End_to_end_architecture.png'
+RENDER_COMPLETE 09_End_to_end_architecture
+01:34.985  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/QA_10_Emergency_alert.png'
+RENDER_COMPLETE 10_Emergency_alert
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
