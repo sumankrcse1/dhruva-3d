@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dhruva Defence — Integrated Ecosystem</title>
+<meta name="description" content="Interactive 3D presentation of the Dhruva Defence integrated monitoring, warning and command ecosystem.">
+<link rel="icon" href="assets/dhruva_logo.png">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/webgpu": "./vendor/three/three.module.js",
+    "three/tsl": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- leader lines for the callouts -->
+<svg id="leaders" aria-hidden="true"></svg>
+<div id="callouts" aria-hidden="false"></div>
+
+<!-- ---------------------------------------------------------------- header -->
+<header id="topbar">
+  <div class="brand">
+    <img src="assets/dhruva_logo.png" alt="Dhruva Defence">
+  </div>
+
+  <div class="statusbar">
+    <span id="state-pill" class="state-pill" data-level="NORMAL">NORMAL</span>
+    <span id="hud-clock" class="clock">00:00:00</span>
+    <span id="ticker" class="ticker"></span>
+  </div>
+
+  <div class="motto">
+    <span class="motto__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="motto__text">
+      <b>PEOPLE</b><b>TECHNOLOGY</b><b>SAFETY</b><b>A STRONGER INDIA</b>
+    </span>
+  </div>
+</header>
+
+<!-- ------------------------------------------------------------ left rail -->
+<aside id="rail">
+  <div class="rail__chapter">
+    <span class="rail__eyebrow">Presentation</span>
+    <h1 id="chapter-title">000 · Master overview</h1>
+    <p id="chapter-text"></p>
+    <div class="rail__buttons">
+      <button id="btn-prev" type="button" title="Previous chapter">‹</button>
+      <button id="btn-play" class="btn-primary" type="button"><span>Play tour</span></button>
+      <button id="btn-next" type="button" title="Next chapter">›</button>
+    </div>
+  </div>
+
+  <nav id="chapters" class="chapters" aria-label="Presentation chapters"></nav>
+
+  <section class="rail__group">
+    <h2>Alert state</h2>
+    <div class="levels">
+      <button type="button" data-level="NORMAL">Normal</button>
+      <button type="button" data-level="CAUTION">Caution</button>
+      <button type="button" data-level="ALERT">Alert</button>
+      <button type="button" data-level="AUTO" class="is-active">Auto</button>
+    </div>
+    <p class="hint">Thresholds are editable parameters; this sequence is scripted, not a live evaluator.</p>
+  </section>
+
+  <section class="rail__group">
+    <h2>Information links</h2>
+    <div id="link-classes" class="swatches"></div>
+  </section>
+
+  <section class="rail__group">
+    <h2>View</h2>
+    <label class="toggle"><input type="checkbox" id="tgl-labels" checked><span>Callout labels</span></label>
+    <label class="toggle"><input type="checkbox" id="tgl-links" checked><span>Data pathways</span></label>
+    <label class="toggle"><input type="checkbox" id="tgl-scale" checked><span>Exhibition scale</span></label>
+    <label class="toggle"><input type="checkbox" id="tgl-night"><span>Night / emergency</span></label>
+    <label class="toggle"><input type="checkbox" id="tgl-rotate"><span>Auto-orbit</span></label>
+    <label class="select">Quality
+      <select id="sel-quality">
+        <option value="high">High</option>
+        <option value="balanced">Balanced</option>
+        <option value="performance">Performance</option>
+      </select>
+    </label>
+    <div class="rail__buttons rail__buttons--wide">
+      <button id="btn-reset" type="button">Reset view</button>
+      <button id="btn-fullscreen" type="button">Fullscreen</button>
+      <button id="btn-help" type="button">Help</button>
+    </div>
+    <p id="scale-note" class="hint"></p>
+  </section>
+</aside>
+
+<!-- --------------------------------------------------------- detail panel -->
+<section id="panel" class="panel" aria-live="polite"></section>
+
+<!-- --------------------------------------------------------------- legend -->
+<footer id="footer">
+  <div id="legend" class="legend"></div>
+  <div class="tagline">
+    <span class="tagline__rule" aria-hidden="true"></span>
+    <span>Integrated intelligence for a safer tomorrow</span>
+    <span class="tagline__rule" aria-hidden="true"></span>
+  </div>
+  <p class="disclaimer">
+    Concept visualisation · fictional site · synthetic demonstration data · no operational thresholds,
+    medical claims, coordinates or installation layout are asserted.
+  </p>
+</footer>
+
+<!-- ---------------------------------------------------------------- intro -->
+<div id="intro" class="modal is-open" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <div class="modal__box">
+    <img class="modal__logo" src="assets/dhruva_logo.png" alt="Dhruva Defence">
+    <h2 id="intro-title">Integrated defence ecosystem</h2>
+    <p>
+      One picture of the whole chain: <b>sensor → data → network → software → alert → personnel action</b>,
+      across environmental monitoring, early warning, soldier monitoring, command and control, translation,
+      and the optional perimeter technologies.
+    </p>
+    <div class="modal__grid">
+      <div><b>Click</b> any labelled element, legend item or gold ring to open its detail panel.</div>
+      <div><b>Drag</b> to orbit · <b>scroll</b> to zoom · <b>right-drag</b> to pan.</div>
+      <div><b>Space</b> plays the guided tour · <b>1–8</b> jumps to a chapter.</div>
+      <div><b>L</b> labels · <b>D</b> data links · <b>N</b> night · <b>S</b> true scale · <b>R</b> reset.</div>
+    </div>
+    <p class="modal__note">
+      This is an editable concept visualisation, not a validated digital twin. Hardware geometry follows the
+      published EFM-100C, ANT-50 and LRX-1 reference dimensions; everything not established by a supplied
+      reference is a labelled placeholder. All readings, strikes, tracks and events shown are synthetic.
+    </p>
+    <button type="button" class="btn-primary" data-dismiss="intro">Enter the scene</button>
+  </div>
+</div>
+
+<!-- --------------------------------------------------------------- loader -->
+<div id="loader" class="loader">
+  <div class="loader__inner">
+    <img src="assets/dhruva_logo.png" alt="">
+    <div class="loader__bar"><i></i></div>
+    <p class="loader__msg">Building terrain, hardware and network…</p>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
