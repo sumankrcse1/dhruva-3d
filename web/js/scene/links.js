@@ -167,6 +167,16 @@ export class LinkNetwork {
     this.group.visible = visible;
   }
 
+  /** Dim every class except the ones listed; pass null to restore. */
+  setEmphasis(kinds) {
+    for (const l of this.links) {
+      const base = l.userData.baseOpacity ??
+        (l.userData.baseOpacity = l.userData.material.uniforms.uOpacity.value);
+      const on = !kinds || kinds.includes(l.userData.kind);
+      l.userData.material.uniforms.uOpacity.value = on ? base : base * 0.12;
+    }
+  }
+
   /** Re-point the drone downlink as the drone flies. */
   updateDroneLink(dronePos) {
     const gs = ground(A.command.x - 20, A.command.z - 4, 6);

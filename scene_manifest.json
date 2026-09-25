@@ -1,5 +1,5 @@
 {
-  "objects": 1209,
+  "objects": 1238,
   "collections": [
     "00_ENVIRONMENT",
     "01_EFM_ZONE",
@@ -31,5 +31,10 @@
     3840,
     2160
   ],
-  "unconfirmed": "EFM sensing underside details; watch dimensions and metrics; final Dhruva screens and protocols; exact final warning hardware; personnel asset likeness."
+  "unconfirmed": "EFM sensing underside details; watch dimensions and metrics; final Dhruva screens and protocols; exact final warning hardware; personnel asset likeness.",
+  "deliverable_status": "Concept visualization; remaining exhibition refinements documented in README.md",
+  "render_count": 10,
+  "packed_sounds": [
+    "demo_alert.wav"
+  ]
 }

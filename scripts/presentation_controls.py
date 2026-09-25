@@ -1,14 +1,15 @@
 """Optional Blender UI. Run once in Blender's Text Editor to add an Exhibition sidebar."""
-import bpy
+import bpy, json
 
 class DHRUVA_OT_camera(bpy.types.Operator):
     bl_idname='dhruva.camera'
     bl_label='Show presentation view'
     name:bpy.props.StringProperty()
     def execute(self,context):
+        bindings={m.name:m.camera.name for m in context.scene.timeline_markers if m.camera}
+        if bindings: context.scene['dhruva_saved_camera_bindings']=json.dumps(bindings)
         for marker in context.scene.timeline_markers:
             if marker.camera:
-                marker['camera_binding']=marker.camera.name
                 marker.camera=None
         context.scene.camera=bpy.data.objects.get(self.name)
         for area in context.screen.areas:
@@ -19,8 +20,9 @@ class DHRUVA_OT_timeline(bpy.types.Operator):
     bl_idname='dhruva.timeline'
     bl_label='Restore timeline camera cuts'
     def execute(self,context):
+        bindings=json.loads(context.scene.get('dhruva_saved_camera_bindings','{}'))
         for marker in context.scene.timeline_markers:
-            name=marker.get('camera_binding')
+            name=bindings.get(marker.name)
             if name: marker.camera=bpy.data.objects.get(name)
         context.scene.frame_set(context.scene.frame_current)
         return {'FINISHED'}

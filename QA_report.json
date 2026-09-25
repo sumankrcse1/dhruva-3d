@@ -278,5 +278,21 @@
     "Generic personnel and unconfirmed wearable/interface models remain concept placeholders.",
     "No LOD switching system or photoreal scanned personnel provided.",
     "Blender 4.x compatibility not tested; source scripts use the installed Blender 5.2.2."
-  ]
+  ],
+  "controls_test": {
+    "manual_camera_override": true,
+    "timeline_restore": true,
+    "camera_bindings_restored": 8
+  },
+  "renders_verified": {
+    "count": 10,
+    "width": 3840,
+    "height": 2160,
+    "engine": "Cycles",
+    "samples": "48 for views 1-2; 16 with denoising for views 3-10"
+  },
+  "packed_sounds": [
+    "demo_alert.wav"
+  ],
+  "final_visual_review": "All ten rendered views reviewed, with corrective renders for signage obstruction and alert framing."
 }

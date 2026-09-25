@@ -85,7 +85,9 @@ export function makeSoldier(opts = {}) {
   const forearm = new THREE.Group();
   forearm.name = 'Forearm_L_Rig';
   forearm.position.set(-0.235, 1.0, 0.03);
-  forearm.rotation.x = opts.raiseArm === false ? -0.08 : -1.2;
+  // +1.15 rad lifts the forearm forward-and-up into the "reading the watch"
+  // pose; the relaxed arm hangs down (pi) instead.
+  forearm.rotation.x = opts.raiseArm === false ? Math.PI - 0.12 : 1.15;
   const fa = new THREE.Mesh(new THREE.CapsuleGeometry(0.048, 0.2, 4, 10), fabric);
   fa.position.set(0, 0.11, 0);
   fa.name = 'Forearm_L';
@@ -99,17 +101,27 @@ export function makeSoldier(opts = {}) {
   if (opts.watch) {
     const watch = makeHealthWatch(opts.watchCanvas);
     watch.name = 'Wearable_Watch';
-    // On the back of the wrist, display facing outward (+Z of the arm frame).
-    watch.position.set(0, 0.185, 0.052);
+    // Back of the wrist: with the arm raised this puts the display face up,
+    // where the wearer (and the presentation camera) can read it.
+    watch.position.set(0, 0.185, -0.052);
+    watch.rotation.y = Math.PI;
     watch.userData = { ...watch.userData, soldierId: opts.name, system: 'wearable' };
     forearm.add(watch);
     g.userData.watch = watch;
+
+    // Viewing position for the wearable close-up: out along the face of the
+    // display, clear of the torso. Rides the arm, so the pose can change.
+    const camAnchor = new THREE.Object3D();
+    camAnchor.name = 'Watch_CameraAnchor';
+    camAnchor.position.set(0.1, 0.3, -0.46);
+    forearm.add(camAnchor);
+    g.userData.watchCamera = camAnchor;
   }
   if (opts.device) {
     const dev = makeAndroidDevice(opts.deviceCanvas, 0.16, 0.25);
     dev.name = 'Handheld_Device';
-    dev.position.set(0.06, 0.33, 0.1);
-    dev.rotation.set(-0.5, 0.25, 0.1);
+    dev.position.set(0.05, 0.33, -0.1);
+    dev.rotation.set(-0.4, Math.PI + 0.2, 0.1);
     dev.userData = { ...dev.userData, system: opts.deviceSystem || 'translator' };
     forearm.add(dev);
     g.userData.device = dev;
@@ -124,9 +136,11 @@ export function buildSquad(watchCanvas) {
   g.name = 'ZONE_SoldierWearable';
   const members = [];
   SQUAD.forEach((s, i) => {
+    // The squad commander carries the handheld; SOLDIER 01 stays clear so the
+    // wearable close-up has an unobstructed view of the wrist device.
     const fig = makeSoldier({
       name: s.id, watch: s.watch, watchCanvas,
-      device: i === 0, deviceSystem: 'command',
+      device: i === 4, deviceSystem: 'command',
     });
     fig.position.set(s.x, terrainHeight(s.x, s.z), s.z);
     fig.rotation.y = s.facing;

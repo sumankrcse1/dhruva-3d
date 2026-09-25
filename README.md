@@ -1,5 +1,16 @@
 # Dhruva Defence — integrated field ecosystem
 
+Two deliverables, one ecosystem:
+
+- **`web/`** — the interactive 3D presentation that runs in a browser, offline.
+  `cd web && ./serve.sh`, then open http://localhost:8848. Click any subsystem to
+  fly to it and open its sensor → action chain, or press Space for the guided
+  tour. See [web/README.md](web/README.md).
+- **`Dhruva_Defence_Ecosystem.blend`** — the Blender master for high-resolution
+  Cycles stills.
+
+Both use the same zones, the same camera set and the same reference dimensions.
+
 Open **Dhruva_Defence_Ecosystem.blend** in Blender. The scene uses metres, Cycles, and a 3840 × 2160 output preset. Authored with the installed Blender 5.2.2; compatibility with Blender 4.x has not been tested.
 
 ## Presentation
@@ -11,6 +22,7 @@ Open **Dhruva_Defence_Ecosystem.blend** in Blender. The scene uses metres, Cycle
 - Select **SYSTEM_DEMO_CONTROLS** → Object Properties → Custom Properties. Thresholds are deliberately unset (zero, `thresholds_confirmed=False`). The alert animation is scripted and is not a live threshold evaluator.
 - Individual cameras include an additional **CAM_09_LRX_RECEIVER** close-up.
 - For clickable camera and alert controls, open Blender's Text Editor, select the packed **presentation_controls.py** text, and press **Run Script**. The 3D View sidebar then has an **Exhibition** tab. This is optional; the scene opens without executing scripts.
+- Camera buttons temporarily disable automatic timeline camera cuts so an F12 render uses the selected view. Click **Restore timeline camera cuts** to resume the guided sequence.
 - Reusable zone libraries are under **Assets/**; use File → Append → Collection. The master contains packed branding and fonts.
 
 ## What is reference-based
@@ -40,4 +52,12 @@ Downloaded source sheets and the original logo are in `references/`. The supplie
 
 ## Rebuild / render
 
-The editable procedural builder is `scripts/build_scene.py`; it rebuilds from an empty scene and saves a new master. Apply `validate_scene.py`, then `refine_scene.py`, then `finalize_scene.py`, and finally `polish_scene.py` once in that order to reproduce the delivered refinements. The refinement scripts are build stages, not repeatable interactive commands. `scripts/render_views.py` renders the ten requested views from the saved master. Call Blender in background with `--python scripts/render_views.py`; append `-- preview` for reduced-resolution QA or `-- 1 2` to select numbered views. Product close-ups automatically hide information links to keep the hardware readable.
+The editable procedural builder is `scripts/build_scene.py`; it rebuilds from an empty scene and saves a new master. Apply `validate_scene.py`, `refine_scene.py`, `finalize_scene.py`, `polish_scene.py`, `fix_final_framing.py`, and `verify_controls.py` once in that order to reproduce the delivered refinements. Use `export_assets.py` for the product libraries. The refinement scripts are build stages, not repeatable interactive commands. `scripts/render_views.py` renders the ten requested views from the saved master. Call Blender in background with `--python scripts/render_views.py`; append `-- preview` for reduced-resolution QA or `-- 1 2` to select numbered views. Product close-ups automatically hide information links and obstructing exhibit labels to keep the hardware readable.
+
+## Delivery checks
+
+The master contains 1,238 objects and ten cameras. Checked EFM, ANT-50 and LRX enclosure/mast dimensions pass their specified envelopes. Sixty-four hardware meshes were checked for non-manifold edges with zero found. Branding and fonts are packed. Camera selection and restoring all eight timeline bindings were tested. See `QA_report.json` for the scope and limitations of these checks.
+
+The ten stills are in `renders/`; `Contact_sheet.jpg` is a quick review sheet. All are 3840 × 2160 Cycles outputs, with denoising. Views 1–2 use 48 samples; the remaining views use a 16-sample delivery preset. The master keeps a 48-sample preset for further rendering. The initial Metal GPU run stalled, so delivered frames were rendered on the CPU.
+
+Known remaining work: approved product details and interface screenshots, photoreal personnel refinement, final exhibition art direction, and any required LOD switching. The automated mesh check does not certify all assemblies as collision-free or validate real-world engineering.

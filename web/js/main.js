@@ -19,7 +19,7 @@ import {
   buildSquad, buildTranslatorPair, buildAirAssets, makeDrone, buildSatellites, buildDetections,
 } from './scene/actors.js';
 import { LinkNetwork, monitoringRing } from './scene/links.js';
-import { A, VIEWS, LDN_NODES, COLORS, ground, DETECTIONS } from './layout.js';
+import { A, VIEWS, LDN_NODES, COLORS, ground, DETECTIONS, SQUAD } from './layout.js';
 import { SYSTEMS, SYSTEM_BY_ID, SCENE_CALLOUTS, CHAPTERS } from './data/systems.js';
 import { Simulation } from './sim.js';
 import { ScreenSet } from './ui/screens.js';
@@ -98,9 +98,11 @@ class App {
     initMaterials();
     this.sky = new Sky(this.scene);
 
-    // Short-range fill carried by the camera. It has no reach beyond a few
-    // metres, so it lifts hardware close-ups without touching the wide views.
-    this.fill = new THREE.PointLight(0xfff4e2, 9, 14, 2);
+    this.sky.buildEnvironment(this.renderer);
+
+    // Short-range fill carried by the camera, scaled with viewing distance so a
+    // 0.5 m watch close-up and a 30 m mast get the same amount of lift.
+    this.fill = new THREE.PointLight(0xfff4e2, 1, 12, 2);
     this.camera.add(this.fill);
     this.scene.add(this.camera);
   }
@@ -188,7 +190,10 @@ class App {
     this.zone('03_WARNING_SYSTEM', this.warning);
     this.register(this.warning, 'warning', { hero: 4, primary: true });
     this.focusTargets.warning = {
-      object: this.warning.userData.beacon, pad: 14, dir: new THREE.Vector3(0.6, 0.25, 1),
+      object: this.warning.userData.beacon, pad: 22,
+      // Front of the stack (it is rotated 25°), so beacon, sounder and the
+      // local display are all in shot.
+      dir: new THREE.Vector3(Math.sin(25 * DEG), 0.22, Math.cos(25 * DEG)),
     };
 
     // 04_SOLDIER_WEARABLE
@@ -196,8 +201,9 @@ class App {
     this.zone('04_SOLDIER_WEARABLE', this.squad);
     for (const m of this.squad.userData.members) this.register(m, 'wearable', { pad: 1.8 });
     this.focusTargets.wearable = {
-      object: this.squad.userData.members[0].userData.watch, pad: 11,
-      dir: new THREE.Vector3(0.45, 0.42, 0.85),
+      object: this.squad.userData.members[0].userData.watch,
+      anchor: this.squad.userData.members[0].userData.watchCamera,
+      fov: 34,
     };
     this.screens.bind('watch', this.squad.userData.members[0].userData.watch.userData.display);
 
@@ -217,6 +223,9 @@ class App {
     this.translator = buildTranslatorPair(this.screens.canvases.translator);
     this.zone('06_TRANSLATOR', gate, this.translator);
     this.register(this.translator, 'translator', { primary: true, pad: 3.2 });
+    // The perimeter runs right past the meeting point, so use the authored pose
+    // rather than an automatic fit that can end up behind the fence.
+    this.focusTargets.translator.useView = true;
     this.gateFlags = gate.userData.flags;
     this.screens.bind('translator', this.translator.userData.device?.userData.display);
 
@@ -323,6 +332,7 @@ class App {
         this.callouts.panelOpen = false;
         this.hud.setActiveSystem(null);
         this.isolate(null);
+        this.links.setEmphasis(null);
         this.activeSystem = null;
       },
       onFocus: (id) => this.flyToSystem(id),
@@ -418,10 +428,17 @@ class App {
   flyToSystem(id) {
     const entry = this.focusTargets?.[id];
     const sys = SYSTEM_BY_ID[id];
-    if (!entry?.object) { this.setView(sys?.view || 'master'); return; }
+    if (!entry?.object || entry.useView) { this.setView(sys?.view || 'master'); return; }
     const box = new THREE.Box3().setFromObject(entry.object);
     if (box.isEmpty()) { this.setView(sys?.view || 'master'); return; }
     const sphere = box.getBoundingSphere(new THREE.Sphere());
+    // An explicit anchor in the object's own frame beats any computed direction
+    // when the subject can be occluded by its own parent (a wrist device).
+    if (entry.anchor) {
+      const pos = entry.anchor.getWorldPosition(new THREE.Vector3());
+      this.flyTo(pos, sphere.center.clone(), entry.fov ?? 36, 1.7);
+      return;
+    }
     // Large composites (the command post, the airbase) frame far better from a
     // hand-authored pose than from an automatic bounding-sphere fit.
     if (sphere.radius > 22 && VIEWS[sys?.view]) { this.setView(sys.view); return; }
@@ -441,6 +458,7 @@ class App {
     this.callouts.panelOpen = true;
     this.hud.setActiveSystem(id);
     this.callouts.setFocus(id);
+    this.links.setEmphasis(this.linkClassesFor(id));
     this.flyToSystem(id);
     this.activeSystem = id;
   }
@@ -454,6 +472,17 @@ class App {
     }
   }
 
+  /** Classes of information link that belong to a subsystem. */
+  linkClassesFor(id) {
+    const map = {
+      efm: ['sensor'], lds: ['network'], warning: ['warning'], wearable: ['health'],
+      translator: ['translation'], command: ['network', 'warning', 'health', 'sensor'],
+      border: ['sensor'], geofence: ['sensor'], drone: ['network'],
+      satellite: ['satellite'], airbase: ['network'],
+    };
+    return map[id] || null;
+  }
+
   traceLinks(id) {
     if (!id) {
       for (const k of Object.keys(this.links.classes)) {
@@ -463,12 +492,7 @@ class App {
       }
       return;
     }
-    const map = {
-      efm: ['sensor'], lds: ['network'], warning: ['warning'], wearable: ['health'],
-      translator: ['translation'], command: ['network', 'warning'], border: ['sensor'],
-      geofence: ['sensor'], drone: ['network'], satellite: ['satellite'], airbase: ['network'],
-    };
-    const on = new Set(map[id] || []);
+    const on = new Set(this.linkClassesFor(id) || []);
     for (const k of Object.keys(this.links.classes)) {
       const visible = on.has(k);
       this.links.setClassVisible(k, visible);
@@ -485,13 +509,20 @@ class App {
     const c = CHAPTERS[i];
     this.hud.setChapter(i);
     if (c.system) {
-      this.hud.setActiveSystem(c.system);
-      this.callouts.setFocus(c.system);
-      this.panel.open(c.system);
-      this.flyToSystem(c.system);
+      this.selectSystem(c.system);
+      // Chapter 300 demonstrates the escalation rather than describing it.
+      // Scripted, as the panel states — not a live threshold evaluation.
+      if (c.system === 'warning') {
+        this.sim.setLevel('CAUTION', 'Demo sequence');
+        clearTimeout(this._warnTimer);
+        this._warnTimer = setTimeout(() => {
+          if (this.chapterIndex === i) this.sim.setLevel('ALERT', 'Demo sequence');
+        }, 6000);
+      }
     } else {
       this.hud.setActiveSystem(null);
       this.callouts.setFocus(null);
+      this.links.setEmphasis(null);
       this.panel.close();
       this.setView(c.view);
     }
@@ -681,6 +712,10 @@ class App {
     if (this.nightTarget !== undefined && Math.abs(this.sky.daylight - this.nightTarget) > 0.002) {
       this.sky.setDaylight(this.sky.daylight + (this.nightTarget - this.sky.daylight) * Math.min(1, dt * 1.6));
     }
+
+    const viewDist = this.camera.position.distanceTo(this.controls.target);
+    this.fill.intensity = Math.min(9, Math.max(0.5, viewDist * viewDist * 0.3));
+    this.fill.distance = Math.max(3, viewDist * 3.5);
 
     this.updateScale(dt);
     this.updateAssets(dt);

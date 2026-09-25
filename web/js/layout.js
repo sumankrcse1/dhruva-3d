@@ -105,7 +105,8 @@ export const VIEWS = {
   warning: { pos: [-77, 12, 136], target: [-95, 8, 118], fov: 36 },
   wearable: { pos: [-284, 46, 138], target: [-295, 43, 120], fov: 32 },
   command: { pos: [168, 131, 56], target: [165, 126, -10], fov: 46 },
-  translator: { pos: [103, 10, 226], target: [88, 7, 205], fov: 38 },
+  // From inside the perimeter, looking along the line at the two figures.
+  translator: { pos: [80, 10.6, 197.5], target: [88, 8, 204], fov: 40 },
   border: { pos: [96, 168, 196], target: [232, 96, -30], fov: 46 },
   drone: { pos: [104, 176, 128], target: [212, 118, -26], fov: 42 },
   satellite: { pos: [34, 168, 210], target: [38, 262, -352], fov: 52 },

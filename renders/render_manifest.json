@@ -1,0 +1,62 @@
+[
+  {
+    "file": "01_Master_overview.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 8794124
+  },
+  {
+    "file": "02_EFM_closeup.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7087794
+  },
+  {
+    "file": "03_ANT50_closeup.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7320184
+  },
+  {
+    "file": "04_LRX1_receiver.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 6820242
+  },
+  {
+    "file": "05_Lightning_network.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 8275462
+  },
+  {
+    "file": "06_Wearable_concept.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 8310711
+  },
+  {
+    "file": "07_Command_application_concept.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7661191
+  },
+  {
+    "file": "08_Translator_concept.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7802321
+  },
+  {
+    "file": "09_End_to_end_architecture.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7047695
+  },
+  {
+    "file": "10_Emergency_alert.png",
+    "width": 3840,
+    "height": 2160,
+    "bytes": 7250348
+  }
+]

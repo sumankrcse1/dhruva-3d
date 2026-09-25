@@ -347,6 +347,9 @@ export function makeHealthWatch(canvas) {
   const screenMat = canvas ? screenMaterial(canvas) : mat('MAT_Screen');
   const face = part(g, new THREE.Mesh(new THREE.CircleGeometry(0.0205, 36), screenMat), 'Watch_Display',
     [0, 0, 0.0072]);
+  // Twelve o'clock points along the forearm, so the face reads upright to the
+  // wearer (and to the presentation camera) without twisting the strap.
+  face.rotation.z = -Math.PI / 2;
   part(g, cyl(0.0035, 0.0035, 0.006, mat('MAT_StainlessSteel'), 12), 'Watch_Button',
     [0.0245, 0.004, 0], [0, 0, Math.PI / 2]);
   // Underside optical sensor area.

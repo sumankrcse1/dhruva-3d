@@ -1,0 +1,15 @@
+00:00.477  blend            | Read blend: "/Users/sumankumaryadav/Documents/dhruva 3d model/Dhruva_Defence_Ecosystem.blend"
+Info: Saved as "Dhruva_Defence_Ecosystem.blend"
+01:59.840  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/03_ANT50_closeup.png'
+RENDER_COMPLETE 03_ANT50_closeup
+05:26.584  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/04_LRX1_receiver.png'
+RENDER_COMPLETE 04_LRX1_receiver
+08:12.239  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/07_Command_application_concept.png'
+RENDER_COMPLETE 07_Command_application_concept
+13:20.188  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/08_Translator_concept.png'
+RENDER_COMPLETE 08_Translator_concept
+16:08.831  render           | Saved: '/Users/sumankumaryadav/Documents/dhruva 3d model/renders/10_Emergency_alert.png'
+RENDER_COMPLETE 10_Emergency_alert
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

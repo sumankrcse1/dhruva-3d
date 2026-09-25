@@ -19,11 +19,14 @@ for name,predicate,origin in specs:
     path=os.path.join(folder,name+'.blend'); bpy.data.libraries.write(path,{coll},fake_user=True); exports[name]=len(coll.objects)
     for ob in list(coll.objects): bpy.data.objects.remove(ob,do_unlink=True)
     bpy.data.collections.remove(coll)
+for zone,folder in [('03_WARNING_SYSTEM','WarningBeacon'),('05_COMMAND_CENTER','CommandTerminal')]:
+    bpy.data.libraries.write(os.path.join(ROOT,'Assets',folder,folder+'.blend'),{bpy.data.collections[zone]},fake_user=True)
 report=json.load(open(os.path.join(ROOT,'QA_report.json')))
 report['object_count']=len(bpy.context.scene.objects)
 report['camera_count']=sum(o.type=='CAMERA' for o in bpy.context.scene.objects)
 report['packed_images']=[im.name for im in bpy.data.images if im.packed_file]
 report['packed_fonts']=[f.name for f in bpy.data.fonts if f.packed_file]
+report['packed_sounds']=[sound.name for sound in bpy.data.sounds if sound.packed_file]
 report['reusable_product_exports']=exports
 report['hero_raw_mesh_topology']={}
 for ob in bpy.context.scene.objects:

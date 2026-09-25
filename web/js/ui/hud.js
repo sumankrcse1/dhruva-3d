@@ -18,12 +18,25 @@ export class Hud {
       linkClasses: document.getElementById('link-classes'),
       scaleNote: document.getElementById('scale-note'),
     };
+    this.trackFooterHeight();
     this.buildLegend();
     this.buildChapters();
     this.buildLinkClasses();
     this.bindControls();
     this.activeSystem = null;
     this.lastEventCount = 0;
+  }
+
+  /** The legend wraps to two lines on narrow screens; keep the rail and the
+   *  detail panel clear of whatever height it ends up being. */
+  trackFooterHeight() {
+    const footer = document.getElementById('footer');
+    if (!footer) return;
+    const apply = () => document.documentElement.style
+      .setProperty('--footer-h', `${footer.offsetHeight}px`);
+    apply();
+    if (window.ResizeObserver) new ResizeObserver(apply).observe(footer);
+    window.addEventListener('resize', apply);
   }
 
   buildLegend() {

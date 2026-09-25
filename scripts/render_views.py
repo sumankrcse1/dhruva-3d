@@ -31,9 +31,14 @@ views=[
  ('09_End_to_end_architecture','CAM_08_SYSTEM_ARCHITECTURE',700),
  ('10_Emergency_alert','CAM_04_EARLY_WARNING',360)]
 selected=[a for a in args if a.isdigit()]
+original_visibility={ob:ob.hide_render for ob in scene.objects}
 for idx,(name,cam,frame) in enumerate(views,1):
     if selected and str(idx) not in selected: continue
     scene.frame_set(frame); scene.camera=bpy.data.objects[cam]
+    for ob,value in original_visibility.items(): ob.hide_render=value
+    hide_prefixes={3:['NODE_01_Sign'],4:['NODE_01_CabinetLabel'],7:['Command_Zone'],8:['Translator_Zone'],10:['Warning_Zone','Command_Zone']}.get(idx,[])
+    for ob in scene.objects:
+        if any(ob.name.startswith(prefix) for prefix in hide_prefixes): ob.hide_render=True
     bpy.data.collections['08_DATA_VISUALIZATION'].hide_render=idx not in [1,5,9]
     if idx==10:
         bg=next(n for n in scene.world.node_tree.nodes if n.type=='BACKGROUND'); bg.inputs[1].default_value=.018

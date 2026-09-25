@@ -169,7 +169,8 @@ button { cursor: pointer; }
 
 /* ------------------------------------------------------------- left rail -- */
 #rail {
-  position: fixed; top: 108px; left: 18px; bottom: 148px; z-index: 5;
+  position: fixed; top: 108px; left: 18px; z-index: 5;
+  bottom: calc(var(--footer-h, 150px) + 10px);
   width: var(--rail-w);
   display: flex; flex-direction: column; gap: 12px;
   overflow-y: auto; overscroll-behavior: contain;
@@ -248,7 +249,8 @@ button { cursor: pointer; }
 
 /* ---------------------------------------------------------- detail panel -- */
 .panel {
-  position: fixed; top: 108px; right: 18px; bottom: 148px; z-index: 6;
+  position: fixed; top: 108px; right: 18px; z-index: 6;
+  bottom: calc(var(--footer-h, 150px) + 10px);
   width: var(--panel-w);
   display: flex; flex-direction: column;
   border: 1px solid var(--line); border-radius: var(--radius);
@@ -435,8 +437,6 @@ button { cursor: pointer; }
   .motto__text b { font-size: 12px; }
   .brand img { height: 60px; }
   .ticker { max-width: 26vw; }
-  #rail { bottom: 168px; }
-  .panel { bottom: 168px; }
 }
 @media (max-width: 900px) {
   :root { --rail-w: 240px; --panel-w: 300px; }

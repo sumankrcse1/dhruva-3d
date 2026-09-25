@@ -40,22 +40,26 @@ export function buildAirbase() {
   g.add(runway);
 
   const paint = mat('MAT_RoadPaint');
-  for (let i = -9; i <= 9; i++) {
-    const dash = new THREE.Mesh(new THREE.PlaneGeometry(9, 0.8), paint);
-    dash.rotation.x = -Math.PI / 2;
-    dash.position.set(A.runway.x + i * 15, y + 0.08, A.runway.z);
-    dash.name = 'Runway_Centreline';
-    g.add(dash);
-  }
+  // Centreline and threshold bars, instanced (one draw call each).
+  const markings = (geo, name, placements) => {
+    const im = new THREE.InstancedMesh(geo, paint, placements.length);
+    im.name = name;
+    const m4 = new THREE.Matrix4();
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+    placements.forEach(([px, pz], i) => {
+      m4.compose(new THREE.Vector3(px, y + 0.08, pz), q, new THREE.Vector3(1, 1, 1));
+      im.setMatrixAt(i, m4);
+    });
+    g.add(im);
+  };
+  const centre = [];
+  for (let i = -9; i <= 9; i++) centre.push([A.runway.x + i * 15, A.runway.z]);
+  markings(new THREE.PlaneGeometry(9, 0.8), 'Runway_Centreline', centre);
+  const thresholds = [];
   for (const end of [-1, 1]) {
-    for (let k = -3; k <= 3; k++) {
-      const th = new THREE.Mesh(new THREE.PlaneGeometry(11, 1.5), paint);
-      th.rotation.x = -Math.PI / 2;
-      th.position.set(A.runway.x + end * 140, y + 0.08, A.runway.z + k * 3.4);
-      th.name = 'Runway_Threshold';
-      g.add(th);
-    }
+    for (let k = -3; k <= 3; k++) thresholds.push([A.runway.x + end * 140, A.runway.z + k * 3.4]);
   }
+  markings(new THREE.PlaneGeometry(11, 1.5), 'Runway_Threshold', thresholds);
 
   // Apron and taxiway linking runway to the hangar line.
   const apron = new THREE.Mesh(new THREE.PlaneGeometry(190, 46), mat('MAT_Concrete'));
@@ -399,27 +403,29 @@ export function buildPerimeter() {
   postMesh.instanceMatrix.needsUpdate = true;
   g.add(postMesh);
 
-  // Fence panels follow the ground between posts.
-  const panelGroup = new THREE.Group();
-  panelGroup.name = 'Fence_Panels';
+  // Fence mesh: one merged geometry for the whole run (each panel as a quad
+  // that follows the ground), so the perimeter costs a single draw call.
+  const pos = [];
+  const uv = [];
+  const idx = [];
+  const H = 3;
+  let v = 0;
   for (const [ax, az, bx, bz] of segments) {
     const len = Math.hypot(bx - ax, bz - az);
     const ya = terrainHeight(ax, az), yb = terrainHeight(bx, bz);
-    const geo = new THREE.PlaneGeometry(len, 3, 1, 1);
-    const p = geo.attributes.position;
-    // Skew the panel so its base follows the slope.
-    for (let i = 0; i < p.count; i++) {
-      const t = p.getX(i) / len + 0.5;
-      p.setY(i, p.getY(i) + (yb - ya) * t);
-    }
-    geo.attributes.uv.array.set([0, 1, len / 3, 1, 0, 0, len / 3, 0]);
-    const panel = new THREE.Mesh(geo, meshMat);
-    panel.position.set((ax + bx) / 2, ya + 1.5 - (yb - ya) / 2, (az + bz) / 2);
-    panel.rotation.y = -Math.atan2(bz - az, bx - ax);
-    panel.name = 'Fence_Panel';
-    panelGroup.add(panel);
+    pos.push(ax, ya, az, bx, yb, bz, ax, ya + H, az, bx, yb + H, bz);
+    uv.push(0, 0, len / 3, 0, 0, 1, len / 3, 1);
+    idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
+    v += 4;
   }
-  g.add(panelGroup);
+  const fenceGeo = new THREE.BufferGeometry();
+  fenceGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  fenceGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  fenceGeo.setIndex(idx);
+  fenceGeo.computeVertexNormals();
+  const fence = new THREE.Mesh(fenceGeo, meshMat);
+  fence.name = 'Fence_Panels';
+  g.add(fence);
 
   // Razor coil along the top.
   const topPts = posts.map(([px, pz]) => new THREE.Vector3(px, terrainHeight(px, pz) + 3.05, pz));
@@ -430,6 +436,13 @@ export function buildPerimeter() {
   );
   coil.name = 'Fence_RazorCoil';
   g.add(coil);
+
+  // Cleared strip at the foot of the fence. Chain-link all but vanishes at
+  // overview distance; this keeps the perimeter legible from the wide camera.
+  const strip = ribbonMesh(FENCE_PATH, 0.75,
+    new THREE.MeshStandardMaterial({ color: '#4c4a43', roughness: 0.96 }), 0.1, 320);
+  strip.name = 'Fence_BaseStrip';
+  g.add(strip);
 
   return g;
 }

@@ -166,17 +166,60 @@ export class Sky {
     this.group.add(this.sun, this.hemi, this.ambient, this.moon);
   }
 
+  /** Pre-filtered environment so metals have something to reflect.
+   *  Generated from a sky-coloured gradient, not an external HDRI, so the page
+   *  stays self-contained and offline-capable. */
+  buildEnvironment(renderer) {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envScene = new THREE.Scene();
+
+    const grad = new THREE.Mesh(
+      new THREE.SphereGeometry(60, 32, 20),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `
+          varying vec3 vP;
+          void main() {
+            float h = normalize(vP).y;
+            vec3 sky = mix(vec3(0.62,0.74,0.86), vec3(0.16,0.38,0.66), clamp(h,0.0,1.0));
+            vec3 gnd = mix(vec3(0.42,0.40,0.33), vec3(0.62,0.74,0.86), clamp(h + 1.0, 0.0, 1.0));
+            gl_FragColor = vec4(h > 0.0 ? sky : gnd, 1.0);
+          }`,
+      }),
+    );
+    envScene.add(grad);
+
+    // Sun card — gives brushed metal a highlight to catch.
+    const sun = new THREE.Mesh(
+      new THREE.CircleGeometry(9, 24),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(14, 12.5, 10) }),
+    );
+    sun.position.copy(this.sunDir).multiplyScalar(45);
+    sun.lookAt(0, 0, 0);
+    envScene.add(sun);
+
+    const rt = pmrem.fromScene(envScene, 0.03);
+    this.envMap = rt.texture;
+    this.scene.environment = rt.texture;
+    this.scene.environmentIntensity = 1;
+    pmrem.dispose();
+    grad.geometry.dispose();
+    grad.material.dispose();
+  }
+
   /** k = 1 full daylight, k = 0 night. */
   setDaylight(k) {
     this.daylight = k;
     this.uniforms.uDay.value = k;
     this.sun.intensity = 3.1 * k;
-    this.hemi.intensity = 0.2 + 0.95 * k;
-    this.ambient.intensity = 0.12 + 0.23 * k;
-    this.moon.intensity = (1 - k) * 0.55;
+    this.hemi.intensity = 0.1 + 1.05 * k;
+    this.ambient.intensity = 0.06 + 0.29 * k;
+    this.moon.intensity = (1 - k) * 0.42;
     this.cloudMat.opacity = 0.18 + 0.54 * k;
     this.cloudMat.color.setRGB(0.35 + 0.65 * k, 0.4 + 0.6 * k, 0.5 + 0.5 * k);
     this.stars.material.opacity = (1 - k) * 0.9;
+    this.scene.environmentIntensity = 0.18 + 0.82 * k;
     this.fog.color.copy(this.nightFog).lerp(this.dayFog, k);
     this.fog.density = 0.00016 - (1 - k) * 0.00004;
   }
