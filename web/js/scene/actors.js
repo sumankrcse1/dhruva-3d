@@ -21,17 +21,24 @@ export function makeSoldier(opts = {}) {
   const skin = mat('MAT_Skin');
   const black = mat('MAT_Rubber_Black');
 
+  // Each leg hangs from a hip pivot so the walk cycle swings it from the hip.
   const legGeo = new THREE.CapsuleGeometry(0.075, 0.5, 4, 10);
+  const legs = [];
   for (const s of [-1, 1]) {
+    const hip = new THREE.Group();
+    hip.name = 'Hip';
+    hip.position.set(s * 0.11, 0.86, 0);
     const leg = new THREE.Mesh(legGeo, fabric);
-    leg.position.set(s * 0.11, 0.52, 0);
+    leg.position.set(0, -0.34, 0);
     leg.castShadow = true;
     leg.name = 'Leg';
-    g.add(leg);
+    hip.add(leg);
     const boot = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.1, 0.26), black);
-    boot.position.set(s * 0.11, 0.06, 0.03);
+    boot.position.set(0, -0.8, 0.03);
     boot.name = 'Boot';
-    g.add(boot);
+    hip.add(boot);
+    g.add(hip);
+    legs.push(hip);
   }
 
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.34, 4, 12), fabric);
@@ -68,11 +75,15 @@ export function makeSoldier(opts = {}) {
 
   // Arms: the left forearm is raised so the wrist device is visible.
   const armGeo = new THREE.CapsuleGeometry(0.055, 0.26, 4, 10);
+  const shoulderR = new THREE.Group();
+  shoulderR.name = 'Shoulder_R';
+  shoulderR.position.set(0.21, 1.33, 0.02);
   const armR = new THREE.Mesh(armGeo, fabric);
-  armR.position.set(0.21, 1.17, 0.02);
+  armR.position.set(0, -0.16, 0);
   armR.rotation.z = 0.16;
   armR.name = 'Arm_R';
-  g.add(armR);
+  shoulderR.add(armR);
+  g.add(shoulderR);
 
   const armLUpper = new THREE.Mesh(armGeo, fabric);
   armLUpper.position.set(-0.21, 1.17, 0.02);
@@ -118,8 +129,9 @@ export function makeSoldier(opts = {}) {
     g.userData.watchCamera = camAnchor;
   }
   if (opts.device) {
-    const dev = makeAndroidDevice(opts.deviceCanvas, 0.16, 0.25);
-    dev.name = 'Handheld_Device';
+    const [dw, dh] = opts.deviceSize || [0.16, 0.25];
+    const dev = makeAndroidDevice(opts.deviceCanvas, dw, dh);
+    dev.name = opts.deviceSize ? 'Commander_Tablet' : 'Handheld_Device';
     dev.position.set(0.05, 0.33, -0.1);
     dev.rotation.set(-0.4, Math.PI + 0.2, 0.1);
     dev.userData = { ...dev.userData, system: opts.deviceSystem || 'translator' };
@@ -127,28 +139,62 @@ export function makeSoldier(opts = {}) {
     g.userData.device = dev;
   }
 
-  g.userData = { ...g.userData, type: 'personnel', id: opts.name };
+  g.userData = { ...g.userData, type: 'personnel', id: opts.name, legs, shoulderR, torso, forearm };
   return g;
 }
 
-export function buildSquad(watchCanvas) {
+/**
+ * Gait cycle. `phase` advances with distance walked (one stride per ~1.5 m
+ * walking, longer when running), `speed` in m/s sets swing amplitude and
+ * forward lean — standing still returns the figure to its rest pose.
+ */
+export function animateGait(fig, phase, speed) {
+  const u = fig.userData;
+  if (!u.legs) return;
+  const run = THREE.MathUtils.clamp((speed - 2) / 2, 0, 1);
+  const amp = Math.min(1, speed / 1.4) * (0.42 + run * 0.28);
+  const s = Math.sin(phase);
+  u.legs[0].rotation.x = s * amp;
+  u.legs[1].rotation.x = -s * amp;
+  u.shoulderR.rotation.x = s * amp * 0.9;
+  // Forward lean when running (local pitch, then heading).
+  fig.rotation.order = 'YXZ';
+  fig.rotation.x = run * 0.16;
+  // Body bob: two per stride, a few centimetres, more when running. Returned
+  // so the caller can add it to the ground height.
+  return Math.abs(Math.cos(phase)) * (0.02 + run * 0.05) * Math.min(1, speed);
+}
+
+export function buildSquad(watchCanvas, tabletCanvas) {
   const g = new THREE.Group();
   g.name = 'ZONE_SoldierWearable';
   const members = [];
-  SQUAD.forEach((s, i) => {
-    // The squad commander carries the handheld; SOLDIER 01 stays clear so the
-    // wearable close-up has an unobstructed view of the wrist device.
+  SQUAD.forEach((s) => {
+    // Patrol members walk with the arm down; SOLDIER 01 stands with the arm
+    // raised, reading the watch, so the wearable close-up is unobstructed.
     const fig = makeSoldier({
-      name: s.id, watch: s.watch, watchCanvas,
-      device: i === 4, deviceSystem: 'command',
+      name: s.id, watch: s.watch, watchCanvas, raiseArm: s.patrol === undefined,
     });
     fig.position.set(s.x, terrainHeight(s.x, s.z), s.z);
     fig.rotation.y = s.facing;
     fig.userData.system = 'wearable';
+    fig.userData.spec = s;
+    fig.userData.gait = 0;
     g.add(fig);
     members.push(fig);
   });
-  g.userData = { members };
+
+  // Squad commander holding the monitoring tablet, watching the patrol.
+  const commander = makeSoldier({
+    name: 'COMMANDER', device: true, deviceCanvas: tabletCanvas,
+    deviceSystem: 'wearable', deviceSize: [0.25, 0.17],
+  });
+  commander.position.set(A.commander.x, terrainHeight(A.commander.x, A.commander.z), A.commander.z);
+  commander.rotation.y = -100 * DEG;
+  commander.userData.system = 'wearable';
+  g.add(commander);
+
+  g.userData = { members, commander, tablet: commander.userData.device };
   return g;
 }
 
@@ -315,55 +361,70 @@ export function makeDrone() {
 // ---------------------------------------------------------------------------
 // Satellites + coverage cone with India footprint
 // ---------------------------------------------------------------------------
+const INDIA_MAP_URL = new URL('../../assets/india_map.png', import.meta.url).href;
+
 function indiaTexture() {
-  // Stylised national outline used as a coverage-footprint graphic.
-  const OUTLINE = [
-    [68.2, 23.7], [70.0, 22.8], [72.6, 21.7], [72.9, 19.1], [73.5, 15.9], [74.9, 12.9],
-    [76.0, 10.3], [77.5, 8.1], [79.9, 10.3], [80.3, 13.1], [82.3, 16.9], [84.8, 19.1],
-    [86.9, 20.8], [87.9, 21.5], [89.0, 21.9], [88.9, 24.2], [88.2, 25.2], [89.8, 25.9],
-    [92.0, 25.1], [94.5, 27.0], [96.5, 27.5], [97.4, 28.2], [95.5, 29.0], [92.5, 28.0],
-    [89.5, 28.1], [88.1, 27.9], [85.0, 27.5], [81.0, 30.3], [78.8, 31.5], [76.0, 32.5],
-    [74.5, 34.6], [76.5, 35.6], [78.9, 34.3], [79.5, 32.5], [78.0, 31.0], [75.0, 29.5],
-    [72.9, 27.9], [70.2, 27.9], [68.9, 24.3],
-  ];
-  const W = 512, H = 512;
+  // Official national outline (assets/india_map.png), recoloured as a
+  // coverage-footprint graphic. The source is grey fill, black borders, white
+  // background; white becomes transparent, fill and borders take the HUD blues.
+  const S = 1024;
   const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
+  cv.width = S; cv.height = S;
   const ctx = cv.getContext('2d');
-  const lon0 = 66, lon1 = 99, lat0 = 5, lat1 = 38;
-  const px = (lon) => ((lon - lon0) / (lon1 - lon0)) * W;
-  const py = (lat) => H - ((lat - lat0) / (lat1 - lat0)) * H;
-
-  ctx.clearRect(0, 0, W, H);
-  ctx.beginPath();
-  OUTLINE.forEach(([lon, lat], i) => {
-    const x = px(lon), y = py(lat);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, 'rgba(24,60,96,0.92)');
-  grad.addColorStop(1, 'rgba(12,32,56,0.92)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(140,205,255,0.95)';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Coverage hotspot over the northern sector.
-  const hx = px(77.6), hy = py(34.2);
-  const hot = ctx.createRadialGradient(hx, hy, 0, hx, hy, 48);
-  hot.addColorStop(0, 'rgba(255,238,120,0.98)');
-  hot.addColorStop(0.35, 'rgba(255,120,40,0.85)');
-  hot.addColorStop(1, 'rgba(255,60,30,0)');
-  ctx.fillStyle = hot;
-  ctx.beginPath(); ctx.arc(hx, hy, 48, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#0d1520';
-  ctx.font = 'bold 22px system-ui, sans-serif';
-  ctx.fillText('LADAKH SECTOR', hx + 26, hy - 8);
-
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
+
+  const img = new Image();
+  img.onload = () => {
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const k = S / Math.max(iw, ih);
+    const w = Math.round(iw * k), h = Math.round(ih * k);
+    const ox = Math.round((S - w) / 2), oy = Math.round((S - h) / 2);
+    ctx.clearRect(0, 0, S, S);
+    ctx.drawImage(img, ox, oy, w, h);
+    // Mask the "Created with mapchart.net" credit in the bottom-right corner.
+    ctx.clearRect(ox + w * 0.855, oy + h * 0.975, w * 0.145, h * 0.025);
+
+    const data = ctx.getImageData(0, 0, S, S);
+    const d = data.data;
+    const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+    for (let y = 0; y < S; y++) {
+      const g = clamp((y - oy) / h);
+      const fr = 24 - 12 * g, fg = 60 - 28 * g, fb = 96 - 40 * g;
+      for (let x = 0; x < S; x++) {
+        const i = (y * S + x) * 4;
+        const srcA = d[i + 3] / 255;
+        if (srcA === 0) continue;
+        const L = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+        const a = clamp((0.97 - L) / 0.08) * srcA;   // white -> transparent
+        const t = clamp((0.8 - L) / 0.5);            // grey fill -> border
+        d[i] = fr + (140 - fr) * t;
+        d[i + 1] = fg + (205 - fg) * t;
+        d[i + 2] = fb + (255 - fb) * t;
+        d[i + 3] = 255 * a * (0.92 + 0.06 * t);
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+
+    // Coverage hotspot over the Ladakh sector (Leh, ~77.6E 34.2N), located on
+    // the source image as a fraction of its width and height.
+    const hx = ox + w * 0.34, hy = oy + h * 0.168;
+    const hot = ctx.createRadialGradient(hx, hy, 0, hx, hy, 70);
+    hot.addColorStop(0, 'rgba(255,238,120,0.98)');
+    hot.addColorStop(0.35, 'rgba(255,120,40,0.85)');
+    hot.addColorStop(1, 'rgba(255,60,30,0)');
+    ctx.fillStyle = hot;
+    ctx.beginPath(); ctx.arc(hx, hy, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffe9a8';
+    ctx.strokeStyle = 'rgba(8,16,28,0.9)';
+    ctx.lineWidth = 6;
+    ctx.font = 'bold 40px system-ui, sans-serif';
+    ctx.strokeText('LADAKH SECTOR', hx + 40, hy - 14);
+    ctx.fillText('LADAKH SECTOR', hx + 40, hy - 14);
+
+    tex.needsUpdate = true;
+  };
+  img.src = INDIA_MAP_URL;
   return tex;
 }
 
@@ -449,7 +510,7 @@ export function buildSatellites() {
 // ---------------------------------------------------------------------------
 // Detection overlays (object / vehicle detection from the border sensors)
 // ---------------------------------------------------------------------------
-function bracketBox(w, h, d, color) {
+export function bracketBox(w, h, d, color) {
   const g = new THREE.Group();
   const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, fog: false });
   const t = Math.min(w, h) * 0.06;

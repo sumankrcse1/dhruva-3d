@@ -17,7 +17,7 @@ const SKY_VERT = /* glsl */`
 const SKY_FRAG = /* glsl */`
   varying vec3 vWorld;
   uniform vec3 uHorizonDay, uZenithDay, uHorizonNight, uZenithNight, uSunDir, uSunColor;
-  uniform float uDay;
+  uniform float uDay, uOvercast, uFlash;
   void main() {
     vec3 dir = normalize(vWorld);
     float h = clamp(dir.y * 1.25, -0.2, 1.0);
@@ -26,10 +26,15 @@ const SKY_FRAG = /* glsl */`
     vec3 col = mix(horizon, zenith, pow(max(h, 0.0), 0.62));
     // Warm scatter around the sun, strongest near the horizon.
     float sun = max(dot(dir, normalize(uSunDir)), 0.0);
-    col += uSunColor * pow(sun, 8.0) * 0.28 * uDay;
-    col += uSunColor * pow(sun, 200.0) * 1.4 * uDay;
+    col += uSunColor * pow(sun, 8.0) * 0.28 * uDay * (1.0 - uOvercast);
+    col += uSunColor * pow(sun, 200.0) * 1.4 * uDay * (1.0 - uOvercast);
     // Haze band just above the ridgeline.
     col = mix(col, horizon * 1.04, smoothstep(0.22, -0.05, dir.y) * 0.85);
+    // Storm overcast: flat grey, darker overhead.
+    vec3 grey = vec3(0.36, 0.39, 0.43) * mix(0.18, 1.0, uDay) * (1.0 - 0.35 * max(h, 0.0));
+    col = mix(col, grey, uOvercast * 0.82);
+    // Lightning lights the cloud deck from inside.
+    col += vec3(0.75, 0.8, 1.0) * uFlash;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -77,7 +82,11 @@ export class Sky {
       uSunColor: { value: new THREE.Color('#ffe9c4') },
       uSunDir: { value: this.sunDir.clone() },
       uDay: { value: 1 },
+      uOvercast: { value: 0 },
+      uFlash: { value: 0 },
     };
+    this.overcast = 0;
+    this.flashLevel = 0;
 
     const dome = new THREE.Mesh(
       new THREE.SphereGeometry(4200, 48, 32),
@@ -212,8 +221,9 @@ export class Sky {
   setDaylight(k) {
     this.daylight = k;
     this.uniforms.uDay.value = k;
-    this.sun.intensity = 3.1 * k;
-    this.hemi.intensity = 0.1 + 1.05 * k;
+    const oc = this.overcast;
+    this.sun.intensity = 3.1 * k * (1 - 0.8 * oc);
+    this.hemi.intensity = (0.1 + 1.05 * k) * (1 - 0.35 * oc) + this.flashLevel * 4;
     this.ambient.intensity = 0.06 + 0.29 * k;
     this.moon.intensity = (1 - k) * 0.42;
     this.cloudMat.opacity = 0.18 + 0.54 * k;
@@ -221,7 +231,22 @@ export class Sky {
     this.stars.material.opacity = (1 - k) * 0.9;
     this.scene.environmentIntensity = 0.18 + 0.82 * k;
     this.fog.color.copy(this.nightFog).lerp(this.dayFog, k);
-    this.fog.density = 0.00016 - (1 - k) * 0.00004;
+    this.fog.color.lerp(this.stormFog || (this.stormFog = new THREE.Color('#5d646c')), oc * 0.7 * k);
+    this.fog.density = 0.00016 - (1 - k) * 0.00004 + oc * 0.00022;
+  }
+
+  /** Storm cloud cover 0..1 (dims the sun, greys the sky, thickens haze). */
+  setOvercast(oc) {
+    this.overcast = oc;
+    this.uniforms.uOvercast.value = oc;
+    this.setDaylight(this.daylight);
+  }
+
+  /** Lightning illumination 0..1 for this frame. */
+  setFlash(f) {
+    this.flashLevel = f;
+    this.uniforms.uFlash.value = f * 0.9;
+    this.hemi.intensity = (0.1 + 1.05 * this.daylight) * (1 - 0.35 * this.overcast) + f * 4;
   }
 
   update(dt) {

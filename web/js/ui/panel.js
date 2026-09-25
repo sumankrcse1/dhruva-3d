@@ -81,6 +81,7 @@ export class DetailPanel {
     const sys = SYSTEM_BY_ID[systemId];
     if (!sys) return;
     this.system = sys;
+    this.dashboardOverride = null;
     this.refs.icon.innerHTML = icon(sys.icon);
     this.refs.title.textContent = sys.name;
     this.refs.caption.textContent = sys.caption;
@@ -102,6 +103,7 @@ export class DetailPanel {
   close() {
     this.el.classList.remove('is-open');
     this.system = null;
+    this.dashboardOverride = null;
     this.handlers.onClose?.();
   }
 
@@ -124,9 +126,15 @@ export class DetailPanel {
     this.ctx.setTransform(k, 0, 0, k, 0, 0);
   }
 
+  /** Show a different dashboard than the subsystem default (null restores it). */
+  setDashboard(kind) {
+    this.dashboardOverride = kind;
+    this.draw();
+  }
+
   draw() {
     if (!this.system) return;
-    renderDashboard(this.system.dashboard, this.ctx,
+    renderDashboard(this.dashboardOverride || this.system.dashboard, this.ctx,
       DetailPanel.LOGICAL_W, DetailPanel.LOGICAL_H, this.sim, 0);
   }
 

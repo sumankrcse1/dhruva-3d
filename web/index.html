@@ -67,9 +67,9 @@
       <button type="button" data-level="NORMAL">Normal</button>
       <button type="button" data-level="CAUTION">Caution</button>
       <button type="button" data-level="ALERT">Alert</button>
-      <button type="button" data-level="AUTO" class="is-active">Auto</button>
+      <button type="button" data-level="AUTO">Auto</button>
     </div>
-    <p class="hint">Thresholds are editable parameters; this sequence is scripted, not a live evaluator.</p>
+    <p class="hint">During the stories the state comes from the simulated sensors (field, beam, tracks). Thresholds are demonstration settings.</p>
   </section>
 
   <section class="rail__group">
@@ -84,6 +84,7 @@
     <label class="toggle"><input type="checkbox" id="tgl-scale" checked><span>Exhibition scale</span></label>
     <label class="toggle"><input type="checkbox" id="tgl-night"><span>Night / emergency</span></label>
     <label class="toggle"><input type="checkbox" id="tgl-rotate"><span>Auto-orbit</span></label>
+    <label class="toggle"><input type="checkbox" id="tgl-sound" checked><span>Sound (hooter, thunder, alarms)</span></label>
     <label class="select">Quality
       <select id="sel-quality">
         <option value="high">High</option>
@@ -99,6 +100,14 @@
     <p id="scale-note" class="hint"></p>
   </section>
 </aside>
+
+<!-- ------------------------------------------------------- story caption -->
+<section id="story" class="story" aria-live="polite">
+  <span class="story__step"></span>
+  <h3 class="story__title"></h3>
+  <p class="story__text"></p>
+  <div class="story__bar"><i></i></div>
+</section>
 
 <!-- --------------------------------------------------------- detail panel -->
 <section id="panel" class="panel" aria-live="polite"></section>
@@ -130,7 +139,7 @@
     <div class="modal__grid">
       <div><b>Click</b> any labelled element, legend item or gold ring to open its detail panel.</div>
       <div><b>Drag</b> to orbit · <b>scroll</b> to zoom · <b>right-drag</b> to pan.</div>
-      <div><b>Space</b> plays the guided tour · <b>1–8</b> jumps to a chapter.</div>
+      <div><b>Space</b> plays the guided tour · <b>1–9</b> jumps to a chapter — chapters 2–6 each play a full product story.</div>
       <div><b>L</b> labels · <b>D</b> data links · <b>N</b> night · <b>S</b> true scale · <b>R</b> reset.</div>
     </div>
     <p class="modal__note">

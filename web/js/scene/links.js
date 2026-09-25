@@ -129,11 +129,14 @@ export class LinkNetwork {
       this.add('sensor', p, command, { name: `${s.id}_to_Command`, dashes: 9, speed: 0.28, opacity: 0.75, radius: 0.8 });
     }
 
-    // Soldier wearables -> command (health telemetry)
-    for (const s of SQUAD) {
-      this.add('health', ground(s.x, s.z, 1.3), command,
-        { name: `${s.id}_telemetry`, dashes: 9, speed: 0.22, opacity: 0.85, radius: 0.85 });
-    }
+    // Soldier wearables -> command (health telemetry). These follow the
+    // soldiers as they walk, so their end points are rebuilt periodically.
+    this.commandPoint = command;
+    this.healthLinks = SQUAD.map((s) => this.add('health', ground(s.x, s.z, 1.3), command,
+      { name: `${s.id}_telemetry`, dashes: 9, speed: 0.22, opacity: 0.85, radius: 0.85 }));
+    // Server -> commander's tablet (the tablet is a client of the same service).
+    this.add('health', command, ground(A.commander.x, A.commander.z, 1.6),
+      { name: 'Command_to_CommanderTablet', dashes: 9, speed: 0.4, opacity: 0.85, radius: 0.85 });
 
     // Translator device <-> processing
     this.add('translation', ground(A.gate.x, A.gate.z, 1.6), server,
@@ -183,6 +186,16 @@ export class LinkNetwork {
     const curve = arcCurve(dronePos.clone(), gs, 0.05);
     this.droneLink.geometry.dispose();
     this.droneLink.geometry = new THREE.TubeGeometry(curve, 40, 1.1, 6, false);
+  }
+
+  /** Re-point the wearable telemetry links at the soldiers' current positions. */
+  updateHealthLinks(positions) {
+    positions.forEach((p, i) => {
+      const link = this.healthLinks[i];
+      if (!link) return;
+      link.geometry.dispose();
+      link.geometry = new THREE.TubeGeometry(arcCurve(p, this.commandPoint, 0.045), 48, 0.85, 6, false);
+    });
   }
 
   /** Escalation colours the warning path and speeds up the packets. */

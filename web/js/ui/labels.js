@@ -47,6 +47,15 @@ export class CalloutLayer {
     return item;
   }
 
+  remove(item) {
+    const i = this.items.indexOf(item);
+    if (i < 0) return;
+    this.items.splice(i, 1);
+    item.el.remove();
+    item.line.remove();
+    item.dot.remove();
+  }
+
   setVisible(v) {
     this.visible = v;
     this.layer.style.display = v ? '' : 'none';

@@ -49,7 +49,26 @@ export const A = {
   wearable: { x: -296, z: 120 },
   watchtower: { x: 306, z: -88 },
   server: { x: 145, z: 5 },
+  // Squad commander with the monitoring tablet, beside the patrol area.
+  commander: { x: -292, z: 106 },
 };
+
+// Patrol loop walked by SOLDIER 02–05 (clear of the runway and the apron).
+export const PATROL = { cx: -322, cz: 112, rx: 20, rz: 11 };
+
+/** Point on the patrol loop `s` metres along it (counter-clockwise). */
+export function patrolPoint(s) {
+  // Ramanujan's ellipse perimeter, then an arc-length-uniform-enough angle.
+  const { cx, cz, rx, rz } = PATROL;
+  const h = ((rx - rz) ** 2) / ((rx + rz) ** 2);
+  const P = Math.PI * (rx + rz) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+  const a = ((((s % P) + P) % P) / P) * Math.PI * 2;
+  return {
+    x: cx + Math.cos(a) * rx, z: cz + Math.sin(a) * rz,
+    // Heading of the direction of travel (figure's +Z forward).
+    heading: Math.atan2(-Math.sin(a) * rx, Math.cos(a) * rz),
+  };
+}
 
 // Perimeter sensor posts (border RX/TX nodes) placed along the fence line.
 export const SENSOR_POSTS = [
@@ -73,19 +92,55 @@ export const DETECTIONS = [
 ];
 
 // Squad carrying the health-monitoring watch. Anonymised identifiers only.
+// SOLDIER 01 stands reading the watch; 02–05 walk the patrol loop in file,
+// `patrol` metres apart. `fitness` scales the heart-rate response to effort.
 export const SQUAD = [
-  { id: 'SOLDIER 01', x: -296, z: 120, watch: true, facing: -0.6 },
-  { id: 'SOLDIER 02', x: -287, z: 129, watch: true, facing: -0.35 },
-  { id: 'SOLDIER 03', x: -46, z: 118, watch: true, facing: 2.4 },
-  { id: 'SOLDIER 04', x: 130, z: 163, watch: true, facing: -2.1 },
-  { id: 'SOLDIER 05', x: 158, z: 22, watch: true, facing: 1.2 },
+  { id: 'SOLDIER 01', x: -296, z: 120, watch: true, facing: -0.6, restHr: 70, fitness: 1.0 },
+  { id: 'SOLDIER 02', patrol: 0, watch: true, restHr: 66, fitness: 0.95 },
+  { id: 'SOLDIER 03', patrol: -5, watch: true, restHr: 72, fitness: 1.05 },
+  { id: 'SOLDIER 04', patrol: -10, watch: true, restHr: 76, fitness: 1.38 },
+  { id: 'SOLDIER 05', patrol: -15, watch: true, restHr: 68, fitness: 1.0 },
+].map((s) => {
+  if (s.patrol === undefined) return s;
+  const p = patrolPoint(s.patrol);
+  return { ...s, x: p.x, z: p.z, facing: p.heading };
+});
+
+// Microwave barrier: a transmitter at one post floods an ellipsoidal zone to
+// the receiver at the next. Five links along the six perimeter posts.
+export const BARRIER_LINKS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]];
+
+/** Ground position of perimeter sensor post i (as sited by buildSensorPosts). */
+export function sensorPostXZ(i) {
+  const p = fencePoint(SENSOR_POSTS[i].t);
+  return { x: p.x - 6, z: p.z };
+}
+
+// --- Space segment -----------------------------------------------------------
+// Orbits are drawn around a compressed Earth (scene radius EARTH_R) whose
+// centre is below the site, so passes rise and set over the horizon. Angular
+// rate follows Kepler's third law, ω ∝ r^-1.5, from a reference rate at r0.
+export const ORBIT = {
+  earthR: 6000, centre: [60, -6000, -40], r0: 6900, omega0: 0.036,
+  kmPerUnit: 0.6,        // scene metre -> km, for displayed ranges
+};
+export const LEO_SATS = [
+  { id: 'CAT-40931', alt: 900, az: 20, tilt: 18, phase: -0.2 },
+  { id: 'CAT-41876', alt: 1010, az: 112, tilt: -26, phase: 0.9 },
+  { id: 'CAT-39088', alt: 860, az: 64, tilt: 34, phase: 2.2 },
+  { id: 'CAT-43217', alt: 950, az: 158, tilt: -8, phase: 3.3 },
+  { id: 'CAT-37744', alt: 980, az: 88, tilt: 12, phase: 4.4 },
+  { id: 'CAT-44602', alt: 920, az: 136, tilt: 22, phase: 5.4 },
 ];
+// Uncatalogued low orbiter used in the space-watch story.
+// Tilt 0: its ground track passes straight over the site.
+export const SPY_SAT = { id: 'UNK-0917', alt: 780, az: 34, tilt: 0 };
 
 // --- Air assets ------------------------------------------------------------
+// Geostationary communications satellite: it keeps station over the equator,
+// so it stays fixed in the sky — the one satellite that should not move.
 export const SATELLITES = [
-  { id: 'SAT-A', pos: [-246, 236, -330], beam: false },
-  { id: 'SAT-B', pos: [38, 268, -372], beam: true },   // carries the coverage cone
-  { id: 'SAT-C', pos: [292, 246, -338], beam: false },
+  { id: 'GSAT-LINK', pos: [38, 268, -372], beam: true },   // carries the coverage cone
 ];
 
 export const HELI_PATHS = [

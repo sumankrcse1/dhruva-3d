@@ -17,9 +17,11 @@ import {
 } from './scene/installation.js';
 import {
   buildSquad, buildTranslatorPair, buildAirAssets, makeDrone, buildSatellites, buildDetections,
+  animateGait,
 } from './scene/actors.js';
 import { LinkNetwork, monitoringRing } from './scene/links.js';
-import { A, VIEWS, LDN_NODES, COLORS, ground, DETECTIONS, SQUAD } from './layout.js';
+import { A, VIEWS, LDN_NODES, COLORS, ground, DETECTIONS, SQUAD, patrolPoint } from './layout.js';
+import { StoryDirector } from './stories.js';
 import { SYSTEMS, SYSTEM_BY_ID, SCENE_CALLOUTS, CHAPTERS } from './data/systems.js';
 import { Simulation } from './sim.js';
 import { ScreenSet } from './ui/screens.js';
@@ -53,6 +55,7 @@ class App {
     this.initScene();
     this.buildWorld();
     this.initUI();
+    this.director = new StoryDirector(this);
     this.bindEvents();
     this.setView('master', 0);
     this.hud.setChapter(0);
@@ -197,9 +200,13 @@ class App {
     };
 
     // 04_SOLDIER_WEARABLE
-    this.squad = buildSquad(this.screens.canvases.watch);
+    this.squad = buildSquad(this.screens.canvases.watch, this.screens.canvases.tablet);
     this.zone('04_SOLDIER_WEARABLE', this.squad);
     for (const m of this.squad.userData.members) this.register(m, 'wearable', { pad: 1.8 });
+    this.register(this.squad.userData.commander, 'wearable', { focus: false });
+    this.screens.bind('tablet', this.squad.userData.tablet?.userData.display);
+    this.patrolS = 0;
+    this.patrolV = 1.4;
     this.focusTargets.wearable = {
       object: this.squad.userData.members[0].userData.watch,
       anchor: this.squad.userData.members[0].userData.watchCamera,
@@ -370,7 +377,7 @@ class App {
     window.addEventListener('keydown', (e) => {
       if (e.target.matches('input, select, textarea')) return;
       const n = Number(e.key);
-      if (n >= 1 && n <= 8) { this.goToChapter(n - 1); return; }
+      if (n >= 1 && n <= CHAPTERS.length) { this.goToChapter(n - 1); return; }
       switch (e.key.toLowerCase()) {
         case ' ': e.preventDefault(); this.togglePresentation(); break;
         case 'l': this.toggleCheckbox('tgl-labels'); break;
@@ -452,14 +459,14 @@ class App {
   }
 
   // -- selection & isolation ----------------------------------------------
-  selectSystem(id) {
+  selectSystem(id, opts = {}) {
     if (!SYSTEM_BY_ID[id]) return;
     this.panel.open(id);
     this.callouts.panelOpen = true;
     this.hud.setActiveSystem(id);
     this.callouts.setFocus(id);
     this.links.setEmphasis(this.linkClassesFor(id));
-    this.flyToSystem(id);
+    if (opts.fly !== false) this.flyToSystem(id);
     this.activeSystem = id;
   }
 
@@ -508,17 +515,18 @@ class App {
     this.chapterTimer = 0;
     const c = CHAPTERS[i];
     this.hud.setChapter(i);
+    // Weather persists from the storm chapter into the lightning chapter;
+    // anywhere else the cell is allowed to dissipate.
+    if (c.story !== 'storm' && c.story !== 'lightning') this.director.storm.dismiss();
+    if (c.story) {
+      this.director.play(c.story, () => {
+        if (this.playing && this.chapterIndex === i) this.goToChapter(i + 1);
+      });
+      return;
+    }
+    this.director.stop();
     if (c.system) {
       this.selectSystem(c.system);
-      // Chapter 300 demonstrates the escalation rather than describing it.
-      // Scripted, as the panel states — not a live threshold evaluation.
-      if (c.system === 'warning') {
-        this.sim.setLevel('CAUTION', 'Demo sequence');
-        clearTimeout(this._warnTimer);
-        this._warnTimer = setTimeout(() => {
-          if (this.chapterIndex === i) this.sim.setLevel('ALERT', 'Demo sequence');
-        }, 6000);
-      }
     } else {
       this.hud.setActiveSystem(null);
       this.callouts.setFocus(null);
@@ -532,7 +540,7 @@ class App {
     this.playing = !this.playing;
     this.chapterTimer = 0;
     this.hud.setPlaying(this.playing);
-    if (this.playing) this.goToChapter(this.chapterIndex);
+    if (this.playing && !this.director.story) this.goToChapter(this.chapterIndex);
   }
 
   // -- presentation options ------------------------------------------------
@@ -569,7 +577,9 @@ class App {
 
   // -- per-frame -----------------------------------------------------------
   updateAlertVisuals(dt) {
-    const level = this.sim.level;
+    // The beacon and hooter belong to the weather warning chain; intrusion
+    // and space-watch alerts go to command without sounding the site hooter.
+    const level = this.sim.cause === 'weather' ? this.sim.level : 'NORMAL';
     this.links.setAlertLevel(level);
 
     const pulse = 0.5 + 0.5 * Math.sin(this.sim.time * (level === 'ALERT' ? 9 : 3.2));
@@ -592,7 +602,7 @@ class App {
     }
 
     // Restricted-zone boundary breathes, and turns red when a detection is inside.
-    const breach = this.sim.detections.some((d) => d.inZone);
+    const breach = this.sim.detections.some((d) => d.inZone) || !!this.sim.barrier.breach;
     const gm = this.geofence.userData.dashMat;
     gm.emissive.setHex(breach ? COLORS.alert : 0xff6a3d);
     gm.emissiveIntensity = 1.4 + pulse * (breach ? 2.6 : 0.7);
@@ -646,13 +656,13 @@ class App {
     for (const r of this.drone.userData.rotors) r.rotation.y += dt * 42;
     this.links.updateDroneLink(this.drone.position);
 
+    // Geostationary: fixed in the sky. Only the footprint card turns to face
+    // the viewer so it stays legible.
     for (const sat of this.satellites.userData.sats) {
-      const home = sat.userData.home;
-      sat.position.x = home.x + Math.sin(t * 0.05 + sat.userData.phase) * 26;
-      sat.position.y = home.y + Math.sin(t * 0.08 + sat.userData.phase) * 8;
-      sat.rotation.y = Math.sin(t * 0.06 + sat.userData.phase) * 0.25;
       if (sat.userData.map) sat.userData.map.lookAt(this.camera.position);
     }
+
+    this.updatePatrol(dt);
 
     // Flags and dishes.
     for (const cloth of this.gateFlags || []) {
@@ -663,13 +673,43 @@ class App {
       }
       pos.needsUpdate = true;
     }
-    for (const dish of this.command.userData.dishes || []) {
-      dish.userData.head.rotation.y = Math.sin(t * 0.12) * 0.6;
-    }
+    // Ground-station dishes are pointed at their targets by the story director.
 
     // Searchlight sweep at night.
     const tower = this.scene.getObjectByName('ZONE_Watchtower');
     if (tower?.userData.searchlight) tower.userData.searchlight.rotation.y = Math.sin(t * 0.25) * 0.8;
+  }
+
+  /** Patrol walks the loop in file; speed eases toward the commanded pace. */
+  updatePatrol(dt) {
+    const want = this.director?.patrolSpeed ?? 1.4;
+    // Humans accelerate at roughly 1–2 m/s².
+    const dv = THREE.MathUtils.clamp(want - this.patrolV, -1.8 * dt, 1.5 * dt);
+    this.patrolV += dv;
+    this.patrolS += this.patrolV * dt;
+    const v = this.patrolV;
+    const stride = 1.3 + 0.35 * v;       // metres per full gait cycle
+    const positions = [];
+    this.squad.userData.members.forEach((fig, i) => {
+      const spec = fig.userData.spec;
+      if (spec.patrol === undefined) {
+        this.sim.setSoldierMotion(i, fig.position.x, fig.position.z, 0);
+        positions.push(ground(fig.position.x, fig.position.z, 1.3));
+        return;
+      }
+      const p = patrolPoint(this.patrolS + spec.patrol);
+      fig.userData.gait += (v * dt / stride) * Math.PI * 2;
+      const bob = animateGait(fig, fig.userData.gait, v);
+      fig.position.set(p.x, ground(p.x, p.z).y + bob, p.z);
+      fig.rotation.y = p.heading;
+      this.sim.setSoldierMotion(i, p.x, p.z, v);
+      positions.push(ground(p.x, p.z, 1.3));
+    });
+    this._healthLinkT = (this._healthLinkT || 0) + dt;
+    if (this._healthLinkT > 0.3) {
+      this._healthLinkT = 0;
+      this.links.updateHealthLinks(positions);
+    }
   }
 
   updateScale(dt) {
@@ -703,7 +743,8 @@ class App {
     }
 
     // Presentation auto-advance.
-    if (this.playing) {
+    // Story chapters advance when their story ends; the others after 12 s.
+    if (this.playing && !this.director.story) {
       this.chapterTimer += raw;
       if (this.chapterTimer > 12) this.goToChapter(this.chapterIndex + 1);
     }
@@ -719,6 +760,7 @@ class App {
 
     this.updateScale(dt);
     this.updateAssets(dt);
+    this.director.update(dt);
     this.updateAlertVisuals(dt);
     this.links.update(this.sim.time);
     this.sky.update(dt);

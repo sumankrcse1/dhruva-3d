@@ -100,6 +100,7 @@ export class Hud {
     on('tgl-night', 'change', (e) => this.app.setNight(e.target.checked));
     on('tgl-scale', 'change', (e) => this.app.setExhibitionScale(e.target.checked));
     on('tgl-rotate', 'change', (e) => { this.app.controls.autoRotate = e.target.checked; });
+    on('tgl-sound', 'change', (e) => this.app.director?.setSound(e.target.checked));
     on('sel-quality', 'change', (e) => this.app.setQuality(e.target.value));
     on('btn-help', 'click', () => document.getElementById('intro').classList.add('is-open'));
     document.querySelectorAll('[data-dismiss="intro"]').forEach((b) =>

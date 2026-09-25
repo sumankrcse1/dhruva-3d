@@ -35,8 +35,8 @@ Requires a browser with WebGL 2: current Chrome, Edge, Firefox or Safari.
 | --- | --- |
 | Orbit / zoom / pan | drag · scroll · right-drag |
 | Open a subsystem | click its legend chip, its callout label, the gold ring on the ground, or the hardware itself |
-| Guided tour | **Space**, or *Play tour* — eight chapters, matching the Blender timeline markers |
-| Jump to a chapter | **1**–**8** |
+| Guided tour | **Space**, or *Play tour* — nine chapters; chapters 2–6 are full product stories |
+| Jump to a chapter | **1**–**9** |
 | Callout labels | **L** |
 | Data pathways | **D** |
 | Night / emergency view | **N** |
@@ -54,6 +54,24 @@ that belong to that subsystem.
 
 `window.DHRUVA` is exposed for kiosk or remote control, e.g.
 `DHRUVA.selectSystem('efm')`, `DHRUVA.goToChapter(3)`, `DHRUVA.setNight(true)`.
+
+## Product stories
+
+Each product has a complete story, driven by a physical model rather than a
+timer. A caption box at the top explains each step as it happens.
+
+| Chapter | Story | What drives it |
+| --- | --- | --- |
+| 2 · Storm → EFM | A thunderstorm drifts in; the EFM reading rises; CAUTION at 1 kV/m, ALERT and hooter at 3 kV/m | Two-charge cloud model (−40 C at 6 km, +40 C at 10 km) with ground image charges; rain at terminal velocity; hooter wavefront at 343 m/s |
+| 3 · Strike → LDS | Stepped leader, return stroke, thunder; the radio pulse reaches the three ANT-50 / LRX-1 nodes at different times; hyperbolas cross at the strike | Arrival times from distance ÷ speed of light; time-of-arrival hyperbolas solved from those times; EFM shows the step change |
+| 4 · Soldier health | Patrol walks wearing watches; commander's tablet shows everyone live; double time → SOLDIER 04 over the HR limit → halt → recovery | Heart rate follows each soldier's workload with a physiological lag |
+| 5 · Space watch | Catalogued LEO passes; a new object rises; the station dish slews and tracks it; no catalogue match → flagged; footprint and loss-of-signal shown | Orbit rate from Kepler's third law; dish pointed by azimuth/elevation |
+| 6 · Border intrusion | TX → RX microwave links along the perimeter; intruder climbs the fence and walks into the beam; RX level drops → INTRUSION | Line-of-sight hops over the ridge; loss from the body's position in each link's ellipsoid; free fall from the fence |
+
+Sound (hooter, thunder, rain, alarms) is synthesised in the browser and starts
+after the first click; toggle it under *View*. The site geometry is compressed
+(storm distances 20×, orbits and time) so everything fits one exhibition view —
+the captions and panels say so.
 
 ## Scale
 
@@ -94,7 +112,11 @@ index.html            page shell: header, rail, legend, panel, modals
 css/style.css         all styling
 js/main.js            application: builds the world, wires the interface, runs the loop
 js/layout.js          every world position in one place (anchors, fence, views)
-js/sim.js             synthetic demonstration state
+js/sim.js             demonstration state (field, physiology, strikes, barrier, tracks)
+js/stories.js         story director: steps, captions, camera shots, alerts
+js/audio.js           synthesised hooter, thunder, rain and alarm tones
+js/scene/storm.js     storm cell physics, rain, lightning, wavefronts, TOA hyperbolas
+js/scene/story_assets.js  microwave barrier, intruder, orbiting satellites
 js/data/systems.js    subsystem content: chain, specs, and the "not asserted" notes
 js/scene/terrain.js   analytic heightfield + vegetation + boulders
 js/scene/sky.js       sky dome, clouds, stars, lighting rig, day/night, environment map

@@ -72,8 +72,10 @@ export function screenMaterial(canvas) {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
   const m = new THREE.MeshStandardMaterial({
+    // Matte anti-glare finish: a glossy screen catches the camera fill light
+    // as a white hotspot in close-ups.
     map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: 1.25,
-    roughness: 0.32, metalness: 0, color: '#0a0d12',
+    roughness: 0.7, metalness: 0, color: '#0a0d12',
   });
   m.userData.texture = tex;
   return m;

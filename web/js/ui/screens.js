@@ -3,6 +3,8 @@
 // wherever it appears. Layout is a professional dark industrial UI — not a
 // fictional radar console.
 
+import { PATROL, A } from '../layout.js';
+
 const C = {
   bg: '#080d14',
   panel: '#0e1620',
@@ -110,6 +112,19 @@ function fieldChart(ctx, box, sim, opts = {}) {
     ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + w, gy); ctx.stroke();
     mono(ctx, x - 6, gy + 4, (maxV - (2 * maxV * i) / 4).toFixed(0), C.dim, 10, 'right');
   }
+  // Warning thresholds (both polarities; the storm drives the reading negative).
+  const th = sim.thresholds;
+  if (th) {
+    ctx.setLineDash([5, 4]);
+    for (const [v, col] of [[th.fieldCaution, C.amber], [th.fieldAlert, C.red]]) {
+      for (const sgn of [1, -1]) {
+        const gy = y + h / 2 - ((sgn * v) / maxV) * (h / 2);
+        ctx.strokeStyle = col + 'aa';
+        ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + w, gy); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+  }
   // Series.
   ctx.beginPath();
   data.forEach((v, i) => {
@@ -130,7 +145,9 @@ function fieldChart(ctx, box, sim, opts = {}) {
   mono(ctx, x + w - 4, y + 18, `${sim.field.toFixed(2)} kV/m`, C.text, opts.big ? 22 : 16, 'right');
   label(ctx, x + w - 4 - ctx.measureText(`${sim.field.toFixed(2)} kV/m`).width, y + 32,
     'atmospheric field · synthetic', C.dim, 9);
-  label(ctx, x, y + h + 16, 'Warning threshold: not configured', C.dim, 11);
+  label(ctx, x, y + h + 16, th
+    ? `Demo thresholds · caution ±${th.fieldCaution} · alert ±${th.fieldAlert} kV/m (operator-set)`
+    : 'Warning threshold: not configured', C.dim, 11);
   ctx.restore();
 }
 
@@ -294,7 +311,7 @@ export function drawEFM(ctx, w, h, sim) {
   const b2 = panel(ctx, 14, h - 84, w - 28, 70, null);
   const lvl = sim.level;
   pill(ctx, b2.x, b2.y + 6, `STATE · ${lvl}`, LEVEL_COLOR[lvl], true);
-  label(ctx, b2.x + 150, b2.y + 22, 'Thresholds are operator-configurable parameters and are not set in this demonstration.', C.dim, 11);
+  label(ctx, b2.x + 150, b2.y + 22, 'Fair weather ≈ +0.1 kV/m · a charged cloud overhead drives it strongly negative · a strike shows as a sudden step.', C.dim, 11);
 }
 
 export function drawLightning(ctx, w, h, sim) {
@@ -368,7 +385,32 @@ export function drawTranslator(ctx, w, h, sim) {
 export function drawDetections(ctx, w, h, sim) {
   background(ctx, w, h);
   header(ctx, w, sim, 'BORDER SENSORS · OBJECT DETECTION', 'Perimeter RX/TX posts');
-  const b = panel(ctx, 14, 58, w - 28, h - 72, 'Active detections');
+  const links = sim.barrier.links || [];
+  const topH = links.length ? Math.round((h - 72) * 0.52) : 0;
+  if (links.length) {
+    const bb = panel(ctx, 14, 58, w - 28, topH, 'TX → RX links · received level (dBm)',
+      sim.barrier.breach ? C.red : C.cyan);
+    const colW = bb.w / links.length;
+    links.forEach((l, i) => {
+      const x0 = bb.x + i * colW;
+      const broken = l.broken > 0.5;
+      const col = broken ? C.red : C.green;
+      label(ctx, x0, bb.y + 6, l.id, C.text, 11, 700);
+      mono(ctx, x0, bb.y + 26, `${l.rssi.toFixed(1)}`, col, 15);
+      label(ctx, x0 + 58, bb.y + 26, broken ? 'BEAM BROKEN' : 'CLEAR', col, 10, 700);
+      // Sparkline of the last 12 s, scaled −75…−40 dBm.
+      const sx = x0, sy = bb.y + 36, sw = colW - 14, sh = bb.h - 44;
+      ctx.strokeStyle = C.line; ctx.strokeRect(sx, sy, sw, sh);
+      ctx.beginPath();
+      l.hist.forEach((v, k) => {
+        const px = sx + (k / 119) * sw;
+        const py = sy + sh * (1 - (v + 75) / 35);
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.stroke(); ctx.lineWidth = 1;
+    });
+  }
+  const b = panel(ctx, 14, 58 + topH + (topH ? 10 : 0), w - 28, h - 72 - topH - (topH ? 10 : 0), 'Active detections');
   label(ctx, b.x, b.y + 2, 'ID          CLASS       CONF    ZONE           AGE', C.dim, 10, 600);
   sim.detections.forEach((d, i) => {
     const yy = b.y + 26 + i * 30;
@@ -406,16 +448,32 @@ export function drawDrone(ctx, w, h, sim) {
 export function drawSatellite(ctx, w, h, sim) {
   background(ctx, w, h);
   header(ctx, w, sim, 'SATELLITE TRACKING & FOOTPRINT', 'Illustrative');
-  const b = panel(ctx, 14, 58, w - 28, h - 72, 'Space segment');
-  ['SAT-A', 'SAT-B', 'SAT-C'].forEach((id, i) => {
-    const yy = b.y + 26 + i * 34;
-    ctx.fillStyle = i === 1 ? C.cyan : C.dim;
+  const b = panel(ctx, 14, 58, w - 28, h - 72, 'Objects above the horizon · station tracking');
+  label(ctx, b.x, b.y + 2, 'OBJECT               CATALOGUE      EL      AZ      RANGE', C.dim, 10, 600);
+  const rows = [{ id: 'GSAT-LINK', catalogued: true, geo: true }, ...(sim.space.tracks || [])];
+  rows.slice(0, 7).forEach((r, i) => {
+    const yy = b.y + 26 + i * 30;
+    const col = r.flagged ? C.red : !r.catalogued ? C.amber : r.geo ? C.cyan : C.green;
+    ctx.fillStyle = r.flagged ? 'rgba(255,59,48,0.12)' : i % 2 ? 'rgba(255,255,255,0.02)' : 'transparent';
+    ctx.fillRect(b.x - 6, yy - 15, b.w + 12, 26);
+    ctx.fillStyle = col;
     ctx.beginPath(); ctx.arc(b.x + 5, yy - 4, 4.5, 0, Math.PI * 2); ctx.fill();
-    label(ctx, b.x + 18, yy, id, C.text, 12, 600);
-    label(ctx, b.x + 96, yy, i === 1 ? 'FOOTPRINT ACTIVE' : 'IN VIEW', i === 1 ? C.cyan : C.dim, 11, 600);
-    mono(ctx, b.x + 260, yy, `link ${i === 1 ? 'PRIMARY' : 'STANDBY'}`, C.dim, 11);
+    label(ctx, b.x + 18, yy, r.id + (r.tracking ? '  ◎' : ''), C.text, 12, 600);
+    label(ctx, b.x + 150, yy, r.geo ? 'GEO · FIXED' : r.flagged ? 'NO MATCH' : r.catalogued ? 'MATCHED' : 'CHECKING…', col, 11, 700);
+    if (!r.geo) {
+      mono(ctx, b.x + 262, yy, `${r.el.toFixed(0)}°`, C.dim, 11);
+      mono(ctx, b.x + 318, yy, `${r.az.toFixed(0)}°`, C.dim, 11);
+      mono(ctx, b.x + 376, yy, `${r.range.toFixed(0)} km`, C.dim, 11);
+    }
   });
-  label(ctx, b.x, b.y + b.h - 6, 'No ephemeris or real coverage computation is used', C.dim, 10);
+  if (sim.space.flagged) {
+    const f = sim.space.flagged;
+    const yy = b.y + b.h - 34;
+    ctx.fillStyle = 'rgba(255,59,48,0.16)';
+    rr(ctx, b.x - 4, yy - 18, b.w + 8, 26, 6); ctx.fill();
+    label(ctx, b.x + 6, yy, `⚠ ${f.id} uncatalogued · loss of signal in ${Math.max(0, f.los).toFixed(0)} s · conceal sensitive activity`, C.red, 12, 700);
+  }
+  label(ctx, b.x, b.y + b.h - 6, 'Illustrative orbits (Kepler-rate, compressed) · not a real ephemeris or catalogue', C.dim, 10);
 }
 
 export function drawAirbase(ctx, w, h, sim) {
@@ -450,6 +508,96 @@ export function drawConsole(ctx, w, h, sim) {
     ctx.beginPath(); ctx.arc(b.x + 6, yy - 4, 4.5, 0, Math.PI * 2); ctx.fill();
     label(ctx, b.x + 20, yy, name, C.text, 12, 600);
     label(ctx, b.x + w * 0.55, yy, ok ? 'RUNNING' : 'NOT CONNECTED', ok ? C.green : C.amber, 11, 700);
+  });
+}
+
+/** Commander's tablet: live squad map + per-soldier vitals cards. */
+export function drawTablet(ctx, w, h, sim) {
+  background(ctx, w, h);
+  header(ctx, w, sim, 'SQUAD MONITOR', 'Commander · live wearable telemetry');
+  const flagged = sim.squad.filter((s) => s.state !== 'OK');
+  const top = flagged.length ? 100 : 58;
+  if (flagged.length) {
+    const blink = Math.floor(sim.time * 2.5) % 2 === 0;
+    ctx.fillStyle = blink ? 'rgba(255,157,46,0.9)' : 'rgba(255,157,46,0.55)';
+    rr(ctx, 14, 54, w - 28, 38, 8); ctx.fill();
+    const s = flagged[0];
+    label(ctx, 30, 79, `⚠ ${s.id} · ${s.state} ${s.hr.toFixed(0)} bpm · limit ${sim.thresholds.hrLimit} · tap to locate`, '#170d02', 17, 800);
+  }
+
+  // Map of the patrol area, north up.
+  const mapW = Math.round(w * 0.4);
+  const mb = panel(ctx, 14, top, mapW, h - top - 14, 'Positions');
+  const pts = [...sim.squad.map((s) => [s.x, s.z]), [PATROL.cx, PATROL.cz]];
+  const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length;
+  const cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+  const span = Math.max(40, ...pts.map((p) => Math.max(Math.abs(p[0] - cx), Math.abs(p[1] - cz)) * 2.3));
+  const k = Math.min(mb.w, mb.h) / span;
+  const mx = mb.x + mb.w / 2, my = mb.y + mb.h / 2;
+  const toMap = (x, z) => [mx + (x - cx) * k, my + (z - cz) * k];
+  ctx.strokeStyle = 'rgba(39,180,232,0.35)';
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  for (let i = 0; i <= 64; i++) {
+    const a = (i / 64) * Math.PI * 2;
+    const [px, py] = toMap(PATROL.cx + Math.cos(a) * PATROL.rx, PATROL.cz + Math.sin(a) * PATROL.rz);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const [ax, ay] = toMap(A.commander.x, A.commander.z);
+  ctx.fillStyle = C.gold;
+  ctx.fillRect(ax - 6, ay - 6, 12, 12);
+  label(ctx, ax + 10, ay + 4, 'CDR', C.gold, 12, 700);
+  sim.squad.forEach((s) => {
+    const [px, py] = toMap(s.x, s.z);
+    const col = s.state === 'OK' ? C.green : C.amber;
+    if (s.state !== 'OK') {
+      ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px, py, 13 + (sim.time * 12) % 10, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 1;
+    }
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fill();
+    label(ctx, px + 10, py - 8, s.id.replace('SOLDIER ', 'S'), C.text, 12, 700);
+  });
+  label(ctx, mb.x, mb.y + mb.h - 2, 'N ↑ · 10 m grid', C.dim, 10);
+
+  // Vitals cards.
+  const gx = 28 + mapW, gw = w - gx - 14;
+  const cols = 2, rows = Math.ceil(sim.squad.length / cols);
+  const cw = (gw - 10) / cols, ch = (h - top - 14 - (rows - 1) * 10) / rows;
+  sim.squad.forEach((s, i) => {
+    const x = gx + (i % cols) * (cw + 10);
+    const y = top + Math.floor(i / cols) * (ch + 10);
+    const col = s.state === 'OK' ? C.green : C.amber;
+    ctx.fillStyle = s.state === 'OK' ? C.panel : 'rgba(255,157,46,0.14)';
+    rr(ctx, x, y, cw, ch, 8); ctx.fill();
+    ctx.strokeStyle = s.state === 'OK' ? C.line : C.amber;
+    ctx.lineWidth = s.state === 'OK' ? 1 : 2;
+    rr(ctx, x + 0.5, y + 0.5, cw - 1, ch - 1, 8); ctx.stroke();
+    ctx.lineWidth = 1;
+    label(ctx, x + 12, y + 22, s.id, C.text, 13, 700);
+    label(ctx, x + cw - 12 - ctx.measureText(s.state).width - 20, y + 22, s.state, col, 11, 800);
+    mono(ctx, x + 12, y + 62, s.hr.toFixed(0), col, 34);
+    label(ctx, x + 80, y + 62, 'bpm', C.dim, 12);
+    // Heart-rate sparkline (last 60 s), 50–190 bpm.
+    const sx = x + 124, sy = y + 34, sw = cw - 136, sh = 32;
+    const lim = sy + sh * (1 - (sim.thresholds.hrLimit - 50) / 140);
+    ctx.strokeStyle = C.amber + '88'; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(sx, lim); ctx.lineTo(sx + sw, lim); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    s.hrHist.forEach((v, j) => {
+      const px = sx + (j / 59) * sw, py = sy + sh * (1 - (v - 50) / 140);
+      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 1;
+    const by = y + ch - 14;
+    label(ctx, x + 12, by, `SpO₂ ${s.spo2.toFixed(0)}%`, C.dim, 11, 600);
+    label(ctx, x + 12 + cw * 0.3, by, `${s.temp.toFixed(1)} °C`, C.dim, 11, 600);
+    label(ctx, x + 12 + cw * 0.56, by, `${s.speed.toFixed(1)} m/s`, C.dim, 11, 600);
+    label(ctx, x + cw - 50, by, `${s.battery.toFixed(0)}%`, C.dim, 11, 600);
   });
 }
 
@@ -493,6 +641,7 @@ export const DASHBOARDS = {
   airbase: drawAirbase,
   console: drawConsole,
   watch: drawWatch,
+  tablet: drawTablet,
 };
 
 export function renderDashboard(kind, ctx, w, h, sim, extra) {
@@ -522,6 +671,7 @@ export class ScreenSet {
     make('translator', 'translator', 640, 1000, 2);
     make('watch', 'watch', 320, 320, 4);
     make('handheld', 'squad', 640, 1000, 3);
+    make('tablet', 'tablet', 1024, 680, 5);
   }
 
   update(dt) {
